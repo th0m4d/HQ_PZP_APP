@@ -1,0 +1,26 @@
+<html>
+    <head>
+        <title>HQ PZP App</title>
+	<link rel="stylesheet" href="./css/main.css" />
+	<link rel="stylesheet" href="./css/leaflet.css" />
+	<!--[if lte IE 8]>
+     		<link rel="stylesheet" src="./css/leaflet.ie.css" />
+	<![endif]-->
+        <script type="text/javascript" src="./js/webinos.js"></script>
+	<script type="text/javascript" src="./js/leaflet.js"></script>
+	<script type="text/javascript" src="./js/jquery-1.8.2.min.js"></script>
+ 	<script type="text/javascript" src="./js/main.js"></script>
+    </head>
+    
+    <body>
+    	<h1>HQ - App</h1>
+	<button id="btnFind" >Find Geolocation Service</button>
+	<button id="btnBind" >Bind Webinos Geolocation Service</button>
+      	<button id="btnInit" >Find my location</button>
+      	<button id="btnWatch" >Watch my location</button>
+      	<button id="btnClear" >Stop watching</button>
+	<select id="service_providers" size="5">
+	<div id="map"></div>
+    </body>
+
+</html>

@@ -1,0 +1,25 @@
+var services = {};
+var vehicle = null;
+var bound = false;
+$(document).ready(function () {
+	webinos.discovery.findServices(new ServiceType('http://webinos.org/api/vehicle'), {
+		onFound: function (service) {
+			services[service.serviceAddress] = service;
+			$('#serviceList').append($('<option>' + service.serviceAddress + '</option>'));
+			console.log('SERVICEINFOs');				
+			console.log(service);			
+			alert(service.serviceAddress)
+			if(!bound){
+				vehicle = service
+				vehicle.bindService(
+				{
+					onBind: function (service) {
+					        alert('bound');
+						vehicle.get('gear',function(data){alert(data.gear);})
+					}
+				});
+			}				
+		}
+	});
+});
+
