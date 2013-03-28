@@ -3,9 +3,13 @@
 $(document).ready(function () {
 
 	var geoLocationServices = [];
+	var serviceIndex = 0;
+	var currentService = null;
 	var running = false;
 	var map;
+
 	var vehicleLayer;
+	var vehicleMarkers = [];
 
 	initOpenStreetMaps();
 	findServices();
@@ -31,7 +35,7 @@ $(document).ready(function () {
 	function findServices() {
 		webinos.discovery.findServices(new ServiceType('http://www.w3.org/ns/api-perms/geolocation'), {
 			onFound: function (service) {
-				geoLocationServices[service.serviceAddress] = service;
+				geoLocationServices.push(service);
 				$('#service_providers').append($('<option>' + service.serviceAddress + '</option>'));		
 			}
 		});
@@ -56,16 +60,16 @@ $(document).ready(function () {
 
 
 	function stopMonitoring() {	
-		running = false;
+		running = false;	
 	}
 
 	function updateLocations() {
-		vehicleLayer.clearLayers();
-		var key;
-		for (key in geoLocationServices) {
-			getLocation(geoLocationServices[key]);
+		updateLocationForServiceIndex(serviceIndex);
+	}
 
-		}	
+	function updateLocationForServiceIndex(index) {
+			currentService = geoLocationServices[index];
+			getLocation(currentService);
 	}
 
 	function getLocation(geoLocationService) {
@@ -95,10 +99,27 @@ $(document).ready(function () {
 
 	function handle_geolocation_query(position) {
 
-		// add a marker in the given location, attach some popup content to it and open the popup
-		var marker = L.marker([position.coords.latitude, position.coords.longitude], {icon: getIcon()});
-		vehicleLayer.addLayer(marker);
-		map.setView([position.coords.latitude, position.coords.longitude], 13);
+		console.log('Current position' geoLocationService);
+		
+		if(currentService.serviceAddress in vehicleMarkers) {
+			//update marker		
+			var marker = vehicleMarkers[currentService.serviceAddress];
+			marker.setLatLng([position.coords.latitude, position.coords.longitude]);
+		} else {
+			//create marker		
+			var marker = L.marker([position.coords.latitude, position.coords.longitude], {icon: getIcon()});
+			vehicleMarkers[currentService.serviceAddress] = marker;
+			vehicleLayer.addLayer(marker);
+			map.setView([position.coords.latitude, position.coords.longitude], 13);
+		}
+
+		if(serviceIndex < geoLocationServices.length-1) {
+			serviceIndex++;
+			updateLocationForServiceIndex(serviceIndex);
+		} else {
+			serviceIndex = 0;
+		}
+		
 	}    
 
 	function handle_errors(error) {
