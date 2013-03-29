@@ -100,18 +100,21 @@ $(document).ready(function () {
 	function handle_geolocation_query(position) {
 
 		console.log('Current position of ' + currentService.serviceAddress + ': Lat: ' + position.coords.latitude + ' Lon: ' + position.coords.latitude);
-		
+		var marker;
 		if(currentService.serviceAddress in vehicleMarkers) {
 			//update marker		
-			var marker = vehicleMarkers[currentService.serviceAddress];
+			marker = vehicleMarkers[currentService.serviceAddress];
 			marker.setLatLng([position.coords.latitude, position.coords.longitude]);
 		} else {
 			//create marker		
-			var marker = L.marker([position.coords.latitude, position.coords.longitude], {icon: getIcon()});
+			marker = L.truckmarker([position.coords.latitude, position.coords.longitude], {icon: getIcon()}, currentService.serviceAddress);
+			//marker.on('click', onTruckClick);
 			vehicleMarkers[currentService.serviceAddress] = marker;
 			vehicleLayer.addLayer(marker);
 			map.setView([position.coords.latitude, position.coords.longitude], 13);
-		}
+		}	
+
+		updatePopup(marker);
 
 		if(serviceIndex < geoLocationServices.length-1) {
 			serviceIndex++;
@@ -120,7 +123,15 @@ $(document).ready(function () {
 			serviceIndex = 0;
 		}
 		
-	}    
+	}   
+
+	function updatePopup(marker) {
+		marker.bindPopup(currentService.serviceAddress);
+	}
+
+	function onTruckClick(e) {
+			alert(e);
+	}
 
 	function handle_errors(error) {
 		switch(error.code) {
