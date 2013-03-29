@@ -3,13 +3,12 @@
 $(document).ready(function () {
 
 	var geoLocationServices = [];
-	var serviceIndex = 0;
-	var currentService = null;
 	var running = false;
 	var map;
 
 	var vehicleLayer;
 	var vehicleMarkers = [];
+	var popupContent;
 
 	initOpenStreetMaps();
 	findServices();
@@ -64,26 +63,66 @@ $(document).ready(function () {
 	}
 
 	function updateLocations() {
-		updateLocationForServiceIndex(serviceIndex);
+		var key;
+		for(key in geoLocationServices) {
+			var service = geoLocationServices[key];
+			// bind geolocation rpc service
+			service.bindService({onBind: function (service) {
+				// set position options			
+				var PositionOptions = {};
+				PositionOptions.enableHighAccuracy = true;
+				PositionOptions.maximumAge = 	5000;
+				PositionOptions.timeout = 1000;
+				service.getCurrentPosition(function(position) {
+					processMarker(service, position);
+				}, function(error) {
+					handleError(error);
+				}, PositionOptions); // webinos rpc geolocation:
+			}});      
+		}
 	}
 
-	function updateLocationForServiceIndex(index) {
-			currentService = geoLocationServices[index];
-			getLocation();
+	function processMarker(service, position) {
+
+		console.log('Current position of ' + service.serviceAddress + ': Lat: ' + position.coords.latitude + ' Lon: ' + position.coords.longitude);
+		var marker;
+		if(service.serviceAddress in vehicleMarkers) {
+			//update marker		
+			marker = vehicleMarkers[service.serviceAddress];
+			marker.setLatLng([position.coords.latitude, position.coords.longitude]);
+		} else {
+			//create marker		
+			marker = L.truckmarker([position.coords.latitude, position.coords.longitude], {icon: getIcon()}, service.serviceAddress);
+			//marker.on('click', onTruckClick);
+			vehicleMarkers[service.serviceAddress] = marker;
+			vehicleLayer.addLayer(marker);
+			map.setView([position.coords.latitude, position.coords.longitude], 13);
+		}	
+
+		jQuery.when(updatePopup(service)).then(function() {
+			marker.bindPopup(popupContent);
+		});
+	}   
+
+	function updatePopup(service, marker) {
+		var dfd = jQuery.Deferred();
+		
+		webinos.discovery.findServices(new ServiceType('http://webinos.org/api/vehicle'), {
+			onFound: function (service) {
+					service.bindService({onBind: function (service) {
+						service.get("gear", dataHandler);
+						 function dataHandler(data){
+								popupContent = 'Current gear: ' + data.gear;
+								dfd.resolve();								
+						 }
+						}
+					});
+			}
+		});
+		return dfd.promise();	
 	}
 
-	function getLocation() {
-		// bind geolocation rpc service
-		console.log('Current geolocation service: ' + currentService.serviceAddress);
-		currentService.bindService({onBind: function (service) {
-			// set position options			
-			var PositionOptions = {};
-			PositionOptions.enableHighAccuracy = true;
-			PositionOptions.maximumAge = 	5000;
-			PositionOptions.timeout = 1000;
-			currentService.getCurrentPosition(handle_geolocation_query, handle_errors, PositionOptions); // webinos rpc geolocation:
-		}});       	
-	}
+		
 
 	function getIcon() {
 		return L.icon({
@@ -97,43 +136,11 @@ $(document).ready(function () {
 			});	
 	}
 
-	function handle_geolocation_query(position) {
-
-		console.log('Current position of ' + currentService.serviceAddress + ': Lat: ' + position.coords.latitude + ' Lon: ' + position.coords.latitude);
-		var marker;
-		if(currentService.serviceAddress in vehicleMarkers) {
-			//update marker		
-			marker = vehicleMarkers[currentService.serviceAddress];
-			marker.setLatLng([position.coords.latitude, position.coords.longitude]);
-		} else {
-			//create marker		
-			marker = L.truckmarker([position.coords.latitude, position.coords.longitude], {icon: getIcon()}, currentService.serviceAddress);
-			//marker.on('click', onTruckClick);
-			vehicleMarkers[currentService.serviceAddress] = marker;
-			vehicleLayer.addLayer(marker);
-			map.setView([position.coords.latitude, position.coords.longitude], 13);
-		}	
-
-		updatePopup(marker);
-
-		if(serviceIndex < geoLocationServices.length-1) {
-			serviceIndex++;
-			updateLocationForServiceIndex(serviceIndex);
-		} else {
-			serviceIndex = 0;
-		}
-		
-	}   
-
-	function updatePopup(marker) {
-		marker.bindPopup(currentService.serviceAddress);
-	}
-
 	function onTruckClick(e) {
 			alert(e);
 	}
 
-	function handle_errors(error) {
+	function handleError(error) {
 		switch(error.code) {
 			case error.PERMISSION_DENIED: alert("user did not share geolocation data");
 			break;
