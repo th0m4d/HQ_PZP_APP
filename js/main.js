@@ -69,19 +69,19 @@ $(document).ready(function () {
 
 	function updateLocationForServiceIndex(index) {
 			currentService = geoLocationServices[index];
-			getLocation(currentService);
+			getLocation();
 	}
 
-	function getLocation(geoLocationService) {
+	function getLocation() {
 		// bind geolocation rpc service
-		console.log(geoLocationService);
-		geoLocationService.bindService({onBind: function (service) {
+		console.log('Current geolocation service: ' + currentService.serviceAddress);
+		currentService.bindService({onBind: function (service) {
 			// set position options			
 			var PositionOptions = {};
 			PositionOptions.enableHighAccuracy = true;
 			PositionOptions.maximumAge = 	5000;
 			PositionOptions.timeout = 1000;
-			geoLocationService.getCurrentPosition(handle_geolocation_query, handle_errors, PositionOptions); // webinos rpc geolocation:
+			currentService.getCurrentPosition(handle_geolocation_query, handle_errors, PositionOptions); // webinos rpc geolocation:
 		}});       	
 	}
 
@@ -99,7 +99,7 @@ $(document).ready(function () {
 
 	function handle_geolocation_query(position) {
 
-		console.log('Current position' geoLocationService);
+		console.log('Current position of ' + currentService.serviceAddress + ': Lat: ' + position.coords.latitude + ' Lon: ' + position.coords.latitude);
 		
 		if(currentService.serviceAddress in vehicleMarkers) {
 			//update marker		
