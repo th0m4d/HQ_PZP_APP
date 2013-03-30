@@ -99,21 +99,20 @@ $(document).ready(function () {
 			map.setView([position.coords.latitude, position.coords.longitude], 13);
 		}	
 
-		jQuery.when(updatePopup(service)).then(function() {
-			marker.bindPopup(popupContent);
+		jQuery.when(getGear(service)).done(function(gear) {
+			marker.bindPopup('Current gear: ' + gear);
 		});
 	}   
 
-	function updatePopup(service, marker) {
-		var dfd = jQuery.Deferred();
+	function getGear(service, marker) {
+		var dfd = jQuery.Deferred();	
 		
 		webinos.discovery.findServices(new ServiceType('http://webinos.org/api/vehicle'), {
 			onFound: function (service) {
 					service.bindService({onBind: function (service) {
 						service.get("gear", dataHandler);
 						 function dataHandler(data){
-								popupContent = 'Current gear: ' + data.gear;
-								dfd.resolve();								
+								dfd.resolve(data.gear);								
 						 }
 						}
 					});

@@ -1,11 +1,19 @@
 L.TruckMarker = L.Marker.extend({
 	
+	gear: "-",	
+	wipers: "-",
+	tirepressure: "-",
+	doors: "-",
+	windows: "-",
+	climateall: "-",
+	headlight: "-",
+
 	initialize: function (latlng, options, serviceAddr) {
 		L.Marker.prototype.initialize.call(this, latlng, options);
 		this.serviceAddress = serviceAddr;
 	},
 	
-	getServiceAddress: function () {
+		getServiceAddress: function () {
 		return this.serviceAddress;
 	},
 
