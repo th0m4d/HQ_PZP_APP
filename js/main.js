@@ -8,13 +8,14 @@ $(document).ready(function () {
 
 	var vehicleLayer;
 	var vehicleMarkers = [];
-	var popupContent;
+	var currentSelection;
 
 	initOpenStreetMaps();
 	findServices();
 
 	jQuery("#btnStart").click(startMonitoring);	
 	jQuery("#btnStop").click(stopMonitoring);	
+	jQuery("#serviceProviders").change(goToMarker);
 			
 	function initOpenStreetMaps() {
 		// create a map in the "map" div, set the view to a given place and zoom
@@ -34,8 +35,8 @@ $(document).ready(function () {
 	function findServices() {
 		webinos.discovery.findServices(new ServiceType('http://www.w3.org/ns/api-perms/geolocation'), {
 			onFound: function (service) {
-				geoLocationServices.push(service);
-				$('#service_providers').append($('<option>' + service.serviceAddress + '</option>'));		
+				geoLocationServices[service.serviceAddress] = service;
+				$('#serviceProviders').append($('<option>' + service.serviceAddress + '</option>'));		
 			}
 		});
 	
@@ -99,26 +100,23 @@ $(document).ready(function () {
 			map.setView([position.coords.latitude, position.coords.longitude], 13);
 		}	
 
-		jQuery.when(getGear(service)).done(function(gear) {
-			marker.bindPopup('Current gear: ' + gear);
-		});
+		updatePopup(service,marker);
 	}   
 
-	function getGear(service, marker) {
-		var dfd = jQuery.Deferred();	
+	function updatePopup(service, marker) {
 		
 		webinos.discovery.findServices(new ServiceType('http://webinos.org/api/vehicle'), {
 			onFound: function (service) {
 					service.bindService({onBind: function (service) {
 						service.get("gear", dataHandler);
 						 function dataHandler(data){
-								dfd.resolve(data.gear);								
+							marker.gear = data.gear;
+							marker.bindPopup(marker.getVehicleInfoAsHtml());
 						 }
 						}
 					});
 			}
 		});
-		return dfd.promise();	
 	}
 
 		
@@ -150,6 +148,29 @@ $(document).ready(function () {
 			default: alert("unknown error code = " + error.code + "; message = " + error.message);
 			break;
 		}
+	}
+
+	function goToMarker() {
+		var selectedValue = $("#serviceProviders").find(":selected").val();
+		var service = geoLocationServices[selectedValue];
+		service.bindService({onBind: function (service) {
+				// set position options			
+				var PositionOptions = {};
+				PositionOptions.enableHighAccuracy = true;
+				PositionOptions.maximumAge = 	5000;
+				PositionOptions.timeout = 1000;
+				service.getCurrentPosition(function(position) {
+					map.setView([position.coords.latitude, position.coords.longitude], 13);
+					if(typeof currentSelection !== "undefined") {
+						map.removeLayer(currentSelection);
+					}
+					currentSelection = L.circle([position.coords.latitude, position.coords.longitude], 500, {
+				    color: 'red'
+						}).addTo(map);
+				}, function(error) {
+					handleError(error);
+				}, PositionOptions); // webinos rpc geolocation:
+			}});      
 	}
 
 });
