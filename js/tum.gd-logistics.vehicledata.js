@@ -13,7 +13,7 @@ function VehicleData() {
   this.tripcomputer.mileage = "-";
   this.tripcomputer.range = "-";
 
-	this.parksensorsfront = "-";
+	this.parksensorsfront = "-";	
 	this.parksensorsrear = "-";
 	this.engineoil = "-";
 	this.wipers = "-";

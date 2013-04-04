@@ -33,7 +33,7 @@ function GRVehicle(map, geolocationService) {
 			marker = L.vehiclemarker([position.coords.latitude, position.coords.longitude], {icon: getIcon()}, geolocationService.serviceAddress);
 			marker.addTo(map);
 			marker.on('click', onMarkerClick);
-			popup = L.popup({offset: new L.Point(0, -15)});
+			popup = L.popup({offset: new L.Point(0, -15), maxWidth: 400});
 		}	
 		popup.setLatLng(marker.getLatLng());
 	}   
@@ -93,12 +93,17 @@ function GRVehicle(map, geolocationService) {
 		vehicleData.tripcomputer.range = data.range;
 		updatePopupData();
 	}
-
 	
 	function getVehicleInfoAsHtml() {
-		return 	"<p>" + "Gear: " + vehicleData.gear + "<br/>" + 
+		return 	"<p><b>" + geolocationService.serviceAddress + "</b><br/>" +
+						"Gear: " + vehicleData.gear + "<br/>" + 
 						"Average speed: " + vehicleData.tripcomputer.averageSpeed + "<br/>" +
-						"Average consumption: " + vehicleData.tripcomputer.averageConsumption + "<br/>" + "</p>";	
+						"Trip speed: "	+ vehicleData.tripcomputer.tripSpeed + "<br/>" + 
+						"Average consumption: " + vehicleData.tripcomputer.averageConsumption + "<br/>" +
+						"Trip consumtpion: "	+ vehicleData.tripcomputer.tripConsumption + "<br/>" + 
+						"Mileage: " + vehicleData.tripcomputer.mileage + "<br/>" +
+						"Range: "	 + vehicleData.tripcomputer.range + "<br/>" +
+						"Distance: "	+ vehicleData.tripcomputer.tripDistance + "<br/>" + "</p>";	
 	}
 
 
