@@ -1,4 +1,4 @@
-L.TruckMarker = L.Marker.extend({
+L.VehicleMarker = L.Marker.extend({
 	
 	gear: "-",
 	tripcomputer: "-",
@@ -58,6 +58,6 @@ L.TruckMarker = L.Marker.extend({
 
 });
 
-L.truckmarker = function (latlng, options, serviceAddress) {
-	return new L.TruckMarker(latlng, options, serviceAddress);
+L.vehiclemarker = function (latlng, options, serviceAddress) {
+	return new L.VehicleMarker(latlng, options, serviceAddress);
 };
