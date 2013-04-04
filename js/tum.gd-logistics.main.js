@@ -33,24 +33,22 @@ $(document).ready(function () {
 	function findServices() {
 		webinos.discovery.findServices(new ServiceType('http://www.w3.org/ns/api-perms/geolocation'), {
 			onFound: function (service) {
+				console.log('Found service: ' + service.serviceAddress);
 				$('#serviceProviders').append($('<option>' + service.serviceAddress + '</option>'));						
-				var vehicle = new Vehicle(map, service);
+				var vehicle = new GRVehicle(map, service);
 				vehicles[service.serviceAddress] = vehicle;
-				vehicle.initializeVehicle();
-				vehicle.registerLocationListener();
 			}
 		});
 	}
 
-	function updatePopup(service, marker) {
+	function updatePopup() {
 		
 		webinos.discovery.findServices(new ServiceType('http://webinos.org/api/vehicle'), {
 			onFound: function (service) {
 					service.bindService({onBind: function (service) {
 						service.get("gear", dataHandler);
 						 function dataHandler(data){
-							marker.gear = data.gear;
-							marker.bindPopup(marker.getVehicleInfoAsHtml());
+							console.log("gear is: " + data.gear);
 						 }
 						}
 					});

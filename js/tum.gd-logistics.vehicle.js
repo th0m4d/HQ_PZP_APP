@@ -1,6 +1,5 @@
-function Vehicle(map, geolocationService) {
+function GRVehicle(map, geolocationService) {
 	//public fields
-	this.type = "Vehicle";
 	
 	//private fields
 	var map = map;
@@ -12,9 +11,14 @@ function Vehicle(map, geolocationService) {
 		PositionOptions.enableHighAccuracy = true;
 		PositionOptions.maximumAge = 5000;
 		PositionOptions.timeout = 1000;		
-	var currentPosition;	
-
+	var currentPosition;
+	var vehicleData = new VehicleData();
 	
+	initializeVehiclePosition();
+	registerLocationListener();
+	initializePopupData();
+
+
 	//private methods
 
 	function updatePosition(position) {
@@ -28,7 +32,73 @@ function Vehicle(map, geolocationService) {
 			marker = L.vehiclemarker([position.coords.latitude, position.coords.longitude], {icon: getIcon()}, geolocationService.serviceAddress);
 			marker.addTo(map);
 		}	
+
+		
 	}   
+
+	function updatePopupData(open) {
+		if(marker) {
+			marker.unbindPopup();
+			marker.bindPopup(getVehicleInfoAsHtml());	
+			if(open) {
+				marker.openPopup();			
+			}
+		}	
+	}
+
+	function 	initializeVehiclePosition() {
+		// bind geolocation rpc service
+		geolocationService.bindService({onBind: function (service) {
+			service.getCurrentPosition(function(position) {
+				updatePosition(position);
+			}, function(error) {
+				handleError(error);
+			}, PositionOptions); // webinos rpc geolocation:
+		}});      
+	}
+
+	function initializePopupData() {
+		webinos.discovery.findServices(new ServiceType('http://webinos.org/api/vehicle'), {onFound: bindVehicleService});
+	}
+
+	function bindVehicleService(service) {
+		if(geolocationService.serviceAddress == service.serviceAddress) {
+			vehicleService = service;
+			service.bindService({onBind: updateVehicleData});		
+		}		
+	}
+
+	function updateVehicleData(service) {
+		//register vehicle listeners after vehicle service is bound.
+		registerVehicleListener();
+		service.get("gear", gearDataHandler);
+		service.get("tripcomputer", tripDataHandler);
+		updatePopupData(false);
+	}
+
+	function gearDataHandler(data) {
+		vehicleData.gear = data.gear;
+		updatePopupData(false);
+	}
+
+	function tripDataHandler(data) {
+		vehicleData.tripcomputer.averageConsumption = data.averageConsumption;
+		vehicleData.tripcomputer.tripConsumption = data.tripConsumption;
+		vehicleData.tripcomputer.averageSpeed = data.averageSpeed;
+		vehicleData.tripcomputer.tripSpeed = data.tripSpeed;
+		vehicleData.tripcomputer.tripDistance = data.tripDistance;
+		vehicleData.tripcomputer.mileage = data.mileage;
+		vehicleData.tripcomputer.range = data.range;
+		updatePopupData(false);
+	}
+
+	
+	function getVehicleInfoAsHtml() {
+		return 	"<p>" + "Gear: " + vehicleData.gear + "<br/>" + 
+						"Average speed: " + vehicleData.tripcomputer.averageSpeed + "<br/>" +
+						"Average consumption: " + vehicleData.tripcomputer.averageConsumption + "<br/>" + "</p>";	
+	}
+
 
 	function getIcon() {
 		return L.icon({
@@ -55,29 +125,35 @@ function Vehicle(map, geolocationService) {
 		}
 	}
 
-	//public methods
-	
-	this.registerLocationListener = function() {
-		watchId = geolocationService.watchPosition(updatePosition, handleErrors, PositionOptions);   
+	function registerLocationListener() {
+		if(geolocationService) {
+			watchId = geolocationService.watchPosition(updatePosition, handleErrors, PositionOptions);  
+		}
+		
 	}
 
-	this.unregisterLocationListener = function() {
+	function registerVehicleListener() {
+		if(vehicleService) {
+			vehicleService.addEventListener("tripcomputer", tripDataHandler, false);   
+			vehicleService.addEventListener("gear", gearDataHandler, false);   
+		}
+	}
+
+	function unregisterLocationListener() {
 		geolocationService.clearWatch(watchId);
 	}
 
-	this.initializeVehicle = function() {
-		// bind geolocation rpc service
-		geolocationService.bindService({onBind: function (service) {
-			service.getCurrentPosition(function(position) {
-				updatePosition(position);
-			}, function(error) {
-				handleError(error);
-			}, PositionOptions); // webinos rpc geolocation:
-		}});      
+	function unregisterLocationListener() {
+		if(vehicleService) {
+			vehicleService.removeEventListener("tripcomputer", tripDataHandler, false);   
+			vehicleService.removeEventListener("gear", gearDataHandler, false);   
+		}
 	}
 
+
+	//public methods
 	this.getPosition = function() {
-		return currentPosition;	
+		return currentPosition;		
 	}
 
 }
