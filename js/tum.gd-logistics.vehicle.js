@@ -4,6 +4,7 @@ function GRVehicle(map, geolocationService) {
 	//private fields
 	var map = map;
 	var marker;
+	var popup;
 	var geolocationService = geolocationService;
 	var vehicleService;
 	var watchId;
@@ -31,19 +32,20 @@ function GRVehicle(map, geolocationService) {
 			//create marker		
 			marker = L.vehiclemarker([position.coords.latitude, position.coords.longitude], {icon: getIcon()}, geolocationService.serviceAddress);
 			marker.addTo(map);
+			marker.on('click', onMarkerClick);
+			popup = L.popup({offset: new L.Point(0, -15)});
 		}	
-
-		
+		popup.setLatLng(marker.getLatLng());
 	}   
 
-	function updatePopupData(open) {
-		if(marker) {
-			marker.unbindPopup();
-			marker.bindPopup(getVehicleInfoAsHtml());	
-			if(open) {
-				marker.openPopup();			
-			}
-		}	
+	function onMarkerClick(e) {
+		popup.openOn(map);	
+	}
+
+	function updatePopupData() {
+		if(popup) {
+			popup.setContent(getVehicleInfoAsHtml());		
+		}
 	}
 
 	function 	initializeVehiclePosition() {
@@ -73,12 +75,12 @@ function GRVehicle(map, geolocationService) {
 		registerVehicleListener();
 		service.get("gear", gearDataHandler);
 		service.get("tripcomputer", tripDataHandler);
-		updatePopupData(false);
+		updatePopupData();
 	}
 
 	function gearDataHandler(data) {
 		vehicleData.gear = data.gear;
-		updatePopupData(false);
+		updatePopupData();
 	}
 
 	function tripDataHandler(data) {
@@ -89,7 +91,7 @@ function GRVehicle(map, geolocationService) {
 		vehicleData.tripcomputer.tripDistance = data.tripDistance;
 		vehicleData.tripcomputer.mileage = data.mileage;
 		vehicleData.tripcomputer.range = data.range;
-		updatePopupData(false);
+		updatePopupData();
 	}
 
 	
