@@ -34,12 +34,12 @@
         };
 
 				var connectToChannels = function ()  {
-					var otherPZHs = webinos.session.getOtherPZH();
 
-					if(typeof otherPZHs === "undefined" || otherPZHs.length == 0) {
+					var pzpId = webinos.session.getPZPId();
+					if(typeof pzpId === "undefined" || pzpId.length == 0) {
 						return;
 					}
-
+				
 					app2app.searchForChannels(
 						// the namespace to search for (can include a wildcard "*" instead of "example"
 						// to search for all channels with prefix "org-webinos")
@@ -49,8 +49,7 @@
 						// callback invoked on each channel found, we expect it to be called at most once
 						// because we did not use a wildcard
 						function(channelProxy) {
-							connectedChannels[channelProxy.appInfo.serviceAddress] = channelProxy;		
-							$('#channels').append($('<option>' + channelProxy.namespace + '</option>'));
+							connectedChannels[pzpId] = channelProxy;		
 						},
 						// callback invoked when the search query is accepted for processing
 						function(success) {
@@ -61,14 +60,6 @@
 						}
 					);
 				}
-
-				var getOwnChannel = function() {
-					var pzpId = webinos.session.getPZPId();
-					if(typeof pzpId === "undefined" || pzpId.length == 0) {
-						return;
-					}
-					return connectedChannels[pzpId];
-				}	
 
 				var createChannel = function() {
 
@@ -118,7 +109,11 @@
 
 				var sendMessage = function() {
 					//set sender
-					var ownChannel = getOwnChannel();
+					var pzpId = webinos.session.getPZPId();
+					if(typeof pzpId === "undefined" || pzpId.length == 0) {
+						return;
+					}
+					var ownChannel = connectedChannels[pzpId];
 					if (typeof ownChannel === "undefined") {
 						alert("Message couldnt be send. No channel available.");
 						return;
