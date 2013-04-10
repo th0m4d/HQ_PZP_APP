@@ -62,15 +62,22 @@
 					);
 				}
 
-				var createChannel = function() {
+				var getOwnChannel = function() {
 					var pzpId = webinos.session.getPZPId();
-
 					if(typeof pzpId === "undefined" || pzpId.length == 0) {
 						return;
 					}
+					return connectedChannels[pzpId];
+				}	
 
+				var createChannel = function() {
+
+					var pzpId = webinos.session.getPZPId();
+					if(typeof pzpId === "undefined" || pzpId.length == 0) {
+						return;
+					}
 					var ownChannel = connectedChannels[pzpId];
-					
+
 					if (typeof ownChannel !== "undefined") {
 						alert("Channel is already created.");
 						return;
@@ -102,20 +109,48 @@
                   // callback invoked on success, with the client's channel proxy as parameter
                   function(channelProxy) {
                       ownChannel = channelProxy;
-											$('#channels').append($('<option>' + channelProxy.namespace + "(Own channel)" + '</option>'));
                   },
                   function(error) {
                       alert("Could not create channel: " + error.message);
-											disconnectChannel();
                   }
           );
 				}	
 
-				var disconnectChannel = function(channel) {
-					channel.disconnect(function() {
-					}, function(error) {
-						alert("Could not disconnect from channel: " + error.message);
-					});
+				var sendMessage = function() {
+					//set sender
+					var ownChannel = getOwnChannel();
+					if (typeof ownChannel === "undefined") {
+						alert("Message couldnt be send. No channel available.");
+						return;
+					}
+
+					//set receiver
+					var receiverId = $('#channels').val();
+					var receiver = connectedChannels[receiverId];
+					if (typeof receiver === "undefined") {
+						alert("You have to select a receiver in the list.");
+						return;
+					}
+
+					//set message
+					var message = $('#msg_send').val();
+					if (message.length == 0) {
+						alert("There is no message to send!");
+						return;
+					}
+
+					// send message to all connected clients (in our example this is only one)
+          ownChannel.sendTo(
+            receiver,
+          	message,
+						// callback invoked when the message is accepted for processing
+						function(success) {
+							// ok, but no action needed in our example
+						},
+						function(error) {
+							alert("Could not send message: " + error.message);
+						}
+					);									
 				}
 
 				initApp2App();
@@ -125,6 +160,8 @@
 					var channel = connectedChannels[value];	
 					disconnectChannel(channel);
 				});
+
+				$('#btn_send').click(sendMessage);
 			});
 		</script>
   </head>
