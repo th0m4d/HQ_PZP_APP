@@ -1,0 +1,145 @@
+<html>
+	<head>
+		<title>Handheld App</title>
+		<link rel="stylesheet" href="./css/main.css" />
+		<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
+		<!--[if lte IE 8]>
+    	<link rel="stylesheet" src="./css/leaflet.ie.css" />
+		<![endif]-->
+    <script type="text/javascript" src="./js/webinos.js"></script>
+		<script type="text/javascript" src="./js/leaflet/leaflet.js"></script>
+		<script type="text/javascript" src="./js/jquery-1.8.2.min.js"></script>
+		<script type="text/javascript">
+			$(document).ready(function () {
+				
+				var app2app;
+				var connectedChannels = [];
+				var GR_URN = "urn:service:*";
+
+				var initApp2App = function () {
+					webinos.discovery.findServices(new ServiceType("http://webinos.org/api/app2app"), {
+							onFound: function (service) {
+											service.bindService({
+											onBind: function () {
+													app2app = service;
+													connectToChannels();
+													createChannel();
+											}
+									});
+							},
+							onError: function (error) {
+									alert("Error finding service: " + error.message + " (#" + error.code + ")");
+							}
+					});
+        };
+
+				var connectToChannels = function ()  {
+					var otherPZHs = webinos.session.getOtherPZH();
+
+					if(typeof otherPZHs === "undefined" || otherPZHs.length == 0) {
+						return;
+					}
+
+					app2app.searchForChannels(
+						// the namespace to search for (can include a wildcard "*" instead of "example"
+						// to search for all channels with prefix "org-webinos")
+						GR_URN,
+						// no other zones need to be searched, only its own personal zone
+						[],
+						// callback invoked on each channel found, we expect it to be called at most once
+						// because we did not use a wildcard
+						function(channelProxy) {
+							connectedChannels[channelProxy.appInfo.serviceAddress] = channelProxy;		
+							$('#channels').append($('<option>' + channelProxy.namespace + '</option>'));
+						},
+						// callback invoked when the search query is accepted for processing
+						function(success) {
+							// ok, but no action needed in our example
+						},
+						function(error) {
+							alert("Could not search for channel: " + error.message);
+						}
+					);
+				}
+
+				var createChannel = function() {
+					var pzpId = webinos.session.getPZPId();
+
+					if(typeof pzpId === "undefined" || pzpId.length == 0) {
+						return;
+					}
+
+					var ownChannel = connectedChannels[pzpId];
+					
+					if (typeof ownChannel !== "undefined") {
+						alert("Channel is already created.");
+						return;
+					}
+					
+					var properties = {};
+          // we allow all channel clients to send and receive
+          properties.mode = "send-receive";
+
+          var config = {};
+          // the namespace is an URN which uniquely defines the channel in the personal zone
+          config.namespace = "urn:service:" + pzpId;
+          config.properties = properties;
+          // we can attach application-specific information to the channel
+          config.appInfo = {serviceAddress: app2app.serviceAddress};
+
+          app2app.createChannel(
+                  config,
+                  // callback invoked when a client want to connect to the channel
+                  function(request) {
+                      // we allow all clients to connect (we could also for example check some application-
+                      // specific information in the request.requestInfo to make a decision)
+                      return confirm("Do you allow the client to connect?");
+                  },
+                  // callback invoked to receive messages
+                  function(message) {
+                      alert("The channel creator received a message: " + message.contents);
+                  },
+                  // callback invoked on success, with the client's channel proxy as parameter
+                  function(channelProxy) {
+                      ownChannel = channelProxy;
+											$('#channels').append($('<option>' + channelProxy.namespace + "(Own channel)" + '</option>'));
+                  },
+                  function(error) {
+                      alert("Could not create channel: " + error.message);
+											disconnectChannel();
+                  }
+          );
+				}	
+
+				var disconnectChannel = function(channel) {
+					channel.disconnect(function() {
+					}, function(error) {
+						alert("Could not disconnect from channel: " + error.message);
+					});
+				}
+
+				initApp2App();
+
+				$('#serviceProviders').change(function() {
+					var value = $('#serviceProviders').val();				
+					var channel = connectedChannels[value];	
+					disconnectChannel(channel);
+				});
+			});
+		</script>
+  </head>
+  <body>
+  	<h1>Handheld App</h1>
+			<div id="top_buttons">
+				<input type="button" id="btn_send" value="Send Message">
+				<input type="button" id="btn_send_hq" value="Send to headquarter">
+			</div>		
+			<textarea id="msg_send" cols="50" rows="10"></textarea>
+			<div id="msg_receive" style="height:300px;width:500px;max-height:300px;overflow:auto;"/>
+			<div id="bottom_buttons">
+				<input type="button" id="btn_clr_received" value="Clear">
+			</div>
+			<select id="channels" size="5" width="500" style="width: 500px"></select>
+
+	</body>
+</html>
