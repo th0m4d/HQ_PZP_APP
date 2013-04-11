@@ -14,16 +14,17 @@
 				
 				var app2app;
 				var connectedChannels = [];
-				var GR_URN = "urn:service:*";
-				var pzpId;
+				var GR_URN_BASE = "urn:service:";
+				var ownChannelAddress;
 
 				var initApp2App = function () {
 
-					pzpId = webinos.session.getPZPId();
+					var pzpId = webinos.session.getPZPId();
 					if(typeof pzpId === "undefined" || pzpId.length == 0) {
 						alert("Couldnt find pzp. Please refresh page.");
 						return;
 					}
+					ownChannelAddress = GR_URN_BASE + pzpId;
 
 					webinos.discovery.findServices(new ServiceType("http://webinos.org/api/app2app"), {
 							onFound: function (service) {
@@ -39,22 +40,21 @@
 									alert("Error finding service: " + error.message + " (#" + error.code + ")");
 							}
 					});
-        };
+        }
 
 				var connectToChannels = function ()  {
 
-					
-				
 					app2app.searchForChannels(
 						// the namespace to search for (can include a wildcard "*" instead of "example"
 						// to search for all channels with prefix "org-webinos")
-						GR_URN,
+						GR_URN_BASE + "*",
 						// no other zones need to be searched, only its own personal zone
 						[],
 						// callback invoked on each channel found, we expect it to be called at most once
 						// because we did not use a wildcard
 						function(channelProxy) {
-							connectedChannels[pzpId] = channelProxy;		
+							connectedChannels[channelProxy.namespace] = channelProxy;		
+							$('#channels').append($('<option>' + channelProxy.namespace + '</option>'));	
 						},
 						// callback invoked when the search query is accepted for processing
 						function(success) {
@@ -68,7 +68,7 @@
 
 				var createChannel = function() {
 
-					var ownChannel = connectedChannels[pzpId];
+					var ownChannel = connectedChannels[ownChannelAddress];
 
 					if (typeof ownChannel !== "undefined") {
 						alert("Channel is already created.");
@@ -81,7 +81,7 @@
 
           var config = {};
           // the namespace is an URN which uniquely defines the channel in the personal zone
-          config.namespace = "urn:service:" + pzpId;
+          config.namespace = ownChannelAddress;
           config.properties = properties;
           // we can attach application-specific information to the channel
           config.appInfo = {serviceAddress: app2app.serviceAddress};
@@ -100,7 +100,7 @@
                   },
                   // callback invoked on success, with the client's channel proxy as parameter
                   function(channelProxy) {
-                      ownChannel = channelProxy;
+                      connectedChannels[ownChannelAddress] = channelProxy;
                   },
                   function(error) {
                       console.log("Could not create channel: " + error.message);
@@ -110,7 +110,7 @@
 
 				var sendMessage = function() {
 					//set sender
-					var ownChannel = connectedChannels[pzpId];
+					var ownChannel = connectedChannels[ownChannelAddress];
 					if (typeof ownChannel === "undefined") {
 						alert("Message couldnt be send. No channel available.");
 						return;
@@ -131,7 +131,7 @@
 						return;
 					}
 
-					// send message to all connected clients (in our example this is only one)
+					// send message to specific client
           ownChannel.sendTo(
             receiver,
           	message,
@@ -169,7 +169,7 @@
 				<input type="button" id="btn_send" value="Send Message">
 				<input type="button" id="btn_send_hq" value="Send to headquarter">
 			</div>		
-			<textarea id="msg_send" cols="50" rows="10"></textarea>
+			<textarea id="msg_send" cols="50" rows="10">Hello World!</textarea>
 			<div id="msg_receive" style="height:300px;width:500px;max-height:300px;overflow:auto;"/>
 			<div id="bottom_buttons">
 				<input type="button" id="btn_clr_received" value="Clear">
