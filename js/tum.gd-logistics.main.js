@@ -4,17 +4,20 @@ $(document).ready(function () {
 	var vehicles = [];
 	var currentSelection;
 
+	jQuery("#serviceProviders").change(goToMarker);
+
 	//log messages
 	function printInfo(data) {
 		$('#message').append('<li>'+data.payload.message+'</li>');
 	}
 	webinos.session.addListener('info', printInfo);
+	
+	//listener ensures, that the webinos.session object is initialized.
+	webinos.session.addListener('registeredBrowser', function () {
+		initOpenStreetMaps();
+		findServices();
+	});
 
-	initOpenStreetMaps();
-	findServices();
-
-	jQuery("#serviceProviders").change(goToMarker);
-			
 	function initOpenStreetMaps() {
 		// create a map in the "map" div, set the view to a given place and zoom
 		map = L.map('map').setView([51.505, -0.09], 13);
@@ -30,15 +33,25 @@ $(document).ready(function () {
 
 	}
 
-	function findServices() {
-		webinos.discovery.findServices(new ServiceType('http://www.w3.org/ns/api-perms/geolocation'), {
+ 	function findServices() {
+		webinos.discovery.findServices(new ServiceType('http://webinos.org/api/test'), {
 			onFound: function (service) {
 				console.log('Found service: ' + service.serviceAddress);
-				$('#serviceProviders').append($('<option>' + service.serviceAddress + '</option>'));						
-				var vehicle = new GRVehicle(map, service);
-				vehicles[service.serviceAddress] = vehicle;
+				if(serviceIsFromPZP(service.serviceAddress)) {
+					$('#serviceProviders').append($('<option>' + service.serviceAddress + '</option>'));						
+					var vehicle = new GRVehicle(map, service.serviceAddress);
+					vehicles[service.serviceAddress] = vehicle;				
+				}
 			}
 		});
+	}
+
+	function serviceIsFromPZP(id) {
+		if (id.split("/") && id.split("/").length === 2) {
+			return true;		
+		} else  {
+			return false;		
+		}
 	}
 
 	function updatePopup() {

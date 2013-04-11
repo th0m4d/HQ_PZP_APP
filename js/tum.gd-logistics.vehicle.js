@@ -1,11 +1,12 @@
-function GRVehicle(map, geolocationService) {
+function GRVehicle(map, address) {
 	//public fields
 	
 	//private fields
 	var map = map;
+	var pzpAddress = address;
 	var marker;
 	var popup;
-	var geolocationService = geolocationService;
+	var geolocationService;
 	var vehicleService;
 	var watchId;
 	var PositionOptions = {};
@@ -16,7 +17,6 @@ function GRVehicle(map, geolocationService) {
 	var vehicleData = new VehicleData();
 	
 	initializeVehiclePosition();
-	registerLocationListener();
 	initializePopupData();
 
 
@@ -49,30 +49,45 @@ function GRVehicle(map, geolocationService) {
 	}
 
 	function 	initializeVehiclePosition() {
-		// bind geolocation rpc service
-		geolocationService.bindService({onBind: function (service) {
-			service.getCurrentPosition(function(position) {
-				updatePosition(position);
-			}, function(error) {
-				handleError(error);
-			}, PositionOptions); // webinos rpc geolocation:
-		}});      
+		webinos.discovery.findServices(new ServiceType('http://www.w3.org/ns/api-perms/geolocation'), {
+			onFound: bindGeolocationService	}
+		);      
 	}
+
+	function bindGeolocationService(service) {
+		if(pzpAddress == service.serviceAddress) {
+			geolocationService = service;
+			geolocationService.bindService({onBind: function (service) {
+					registerLocationListener();
+					service.getCurrentPosition(function(position) {
+						updatePosition(position);
+					}, function(error) {
+						handleError(error);
+					}, PositionOptions); // webinos rpc geolocation
+				}
+			});			
+		}
+	}
+
+	
 
 	function initializePopupData() {
 		webinos.discovery.findServices(new ServiceType('http://webinos.org/api/vehicle'), {onFound: bindVehicleService});
 	}
 
 	function bindVehicleService(service) {
-		if(geolocationService.serviceAddress == service.serviceAddress) {
+		if(pzpAddress == service.serviceAddress) {
 			vehicleService = service;
-			service.bindService({onBind: updateVehicleData});		
+			service.bindService({onBind: function(service) {
+				registerVehicleListener();
+				updateVehicleData(service);
+			}});		
 		}		
 	}
 
 	function updateVehicleData(service) {
 		//register vehicle listeners after vehicle service is bound.
-		registerVehicleListener();
+		
 		service.get("gear", gearDataHandler);
 		service.get("tripcomputer", tripDataHandler);
 		updatePopupData();
