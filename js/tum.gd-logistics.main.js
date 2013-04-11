@@ -4,7 +4,7 @@ $(document).ready(function () {
 	var vehicles = [];
 	var currentSelection;
 
-	jQuery("#serviceProviders").change(goToMarker);
+	jQuery("#vehicles").change(goToMarker);
 
 	//log messages
 	function printInfo(data) {
@@ -33,13 +33,18 @@ $(document).ready(function () {
 
 	}
 
+	function noServiceCallback(serviceAddress) {
+		$("#noServiceVehicles").append('<option value=' + serviceAddress + '>' + serviceAddress + '</option>');
+		$('#vehicles').find('option[value=\'' + serviceAddress + '\']').remove();
+	}
+
  	function findServices() {
 		webinos.discovery.findServices(new ServiceType('http://webinos.org/api/test'), {
 			onFound: function (service) {
 				console.log('Found service: ' + service.serviceAddress);
 				if(serviceIsFromPZP(service.serviceAddress)) {
-					$('#serviceProviders').append($('<option>' + service.serviceAddress + '</option>'));						
-					var vehicle = new GRVehicle(map, service.serviceAddress);
+					$('#vehicles').append($('<option value=' + service.serviceAddress + '>' + service.serviceAddress + '</option>'));						
+					var vehicle = new GRVehicle(map, service.serviceAddress, noServiceCallback);
 					vehicles[service.serviceAddress] = vehicle;				
 				}
 			}
@@ -83,17 +88,11 @@ $(document).ready(function () {
 	}
 
 	function goToMarker() {
-		var selectedValue = $("#serviceProviders").find(":selected").val();
+		var selectedValue = $("#vehic").find(":selected").val();
 		if(selectedValue in vehicles) {
 			var vehicle = vehicles[selectedValue];
 			var position = vehicle.getPosition();
 			map.setView([position.coords.latitude, position.coords.longitude], 13);
-//			if(typeof currentSelection !== "undefined") {
-//				map.removeLayer(currentSelection);
-//			}
-//			currentSelection = L.circle([position.coords.latitude, position.coords.longitude], 500, {
-//		    color: 'red'
-//				}).addTo(map);
 		}
 	}
 

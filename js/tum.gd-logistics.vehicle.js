@@ -1,7 +1,8 @@
-function GRVehicle(map, address) {
+function GRVehicle(map, address, noServiceCallback) {
 	//public fields
 	
 	//private fields
+	var callback = noServiceCallback;
 	var map = map;
 	var pzpAddress = address;
 	var marker;
@@ -50,8 +51,13 @@ function GRVehicle(map, address) {
 
 	function 	initializeVehiclePosition() {
 		webinos.discovery.findServices(new ServiceType('http://www.w3.org/ns/api-perms/geolocation'), {
-			onFound: bindGeolocationService	}
+			onFound: bindGeolocationService,
+			onError: throwCallback}
 		);      
+	}
+
+	function throwCallback() {
+		callback(pzpAddress);
 	}
 
 	function bindGeolocationService(service) {
@@ -69,10 +75,11 @@ function GRVehicle(map, address) {
 		}
 	}
 
-	
-
 	function initializePopupData() {
-		webinos.discovery.findServices(new ServiceType('http://webinos.org/api/vehicle'), {onFound: bindVehicleService});
+		webinos.discovery.findServices(new ServiceType('http://webinos.org/api/vehicle'), {
+			onFound: bindVehicleService,
+			onError: throwCallback}
+		);
 	}
 
 	function bindVehicleService(service) {
