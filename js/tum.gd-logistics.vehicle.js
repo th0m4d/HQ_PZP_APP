@@ -179,7 +179,6 @@ function GRVehicle(map, address, noServiceCallback) {
 		}
 	}
 
-
 	//public methods
 	this.getPosition = function() {
 		return currentPosition;		

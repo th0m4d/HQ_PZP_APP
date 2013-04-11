@@ -88,12 +88,21 @@ $(document).ready(function () {
 	}
 
 	function goToMarker() {
-		var selectedValue = $("#vehic").find(":selected").val();
+		var selectedValue = $("#vehicles").find(":selected").val();
 		if(selectedValue in vehicles) {
 			var vehicle = vehicles[selectedValue];
 			var position = vehicle.getPosition();
 			map.setView([position.coords.latitude, position.coords.longitude], 13);
 		}
 	}
+
+	$('#noServiceVehicles').click(function() {
+		var serviceAddress = $('#noServiceVehicles').val();
+		if(typeof serviceAddress === "undefined" || serviceAddress == null || serviceAddress.length == 0) {
+			return;
+		}
+		$('#noServiceVehicles').find('option[value=\'' + serviceAddress + '\']').remove();
+		vehicles[serviceAddress] = new GRVehicle(map, serviceAddress, noServiceCallback);
+	});
 
 });
