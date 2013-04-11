@@ -31,7 +31,7 @@
 											service.bindService({
 											onBind: function () {
 													app2app = service;
-													connectToChannels();
+													searchChannels();
 													createChannel();
 											}
 									});
@@ -42,7 +42,7 @@
 					});
         }
 
-				var connectToChannels = function ()  {
+				var searchChannels = function ()  {
 
 					app2app.searchForChannels(
 						// the namespace to search for (can include a wildcard "*" instead of "example"
@@ -53,8 +53,9 @@
 						// callback invoked on each channel found, we expect it to be called at most once
 						// because we did not use a wildcard
 						function(channelProxy) {
-							connectedChannels[channelProxy.namespace] = channelProxy;		
-							$('#channels').append($('<option>' + channelProxy.namespace + '</option>'));	
+							if(channelProxy.namespace !== ownChannelAddress) {
+								connectToChannel(channelProxy);		
+ 							}
 						},
 						// callback invoked when the search query is accepted for processing
 						function(success) {
@@ -65,6 +66,30 @@
 						}
 					);
 				}
+
+				 var connectToChannel = function(channelProxy) {
+            // we can include application-specific information to the connect request
+            var requestInfo = {};
+            channelProxy.connect(
+                requestInfo,
+                // callback invoked to receive messages, only after successful connect
+                function(message) {
+                    alert("Client received message from creator: " + message.contents);
+                    // we directly reply to the message, and here we send a message to
+                    // the sender only (i.e. the creator in this example)
+                    sendMessageTo(message.from, "client.pong", channelProxy);
+                },
+                // callback invoked when the client is successfully connected (i.e. authorized by the creator)
+                function(success) {
+                  // make the proxy available now that we are successfully connected
+									connectedChannels[channelProxy.namespace] = channelProxy;		
+									$('#channels').append($('<option>' + channelProxy.namespace + '</option>'));	
+                },
+                function(error) {
+                    alert("Could not connect to channel: " + error.message);
+                }
+            );
+        }
 
 				var createChannel = function() {
 
