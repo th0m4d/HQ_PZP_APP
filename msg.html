@@ -30,9 +30,9 @@
 							onFound: function (service) {
 											service.bindService({
 											onBind: function () {
-													app2app = service;
-													searchChannels();
-													createChannel();
+												console.log("app2app service found and bound.");
+												app2app = service;
+												createChannel();	
 											}
 									});
 							},
@@ -53,10 +53,14 @@
 						// callback invoked on each channel found, we expect it to be called at most once
 						// because we did not use a wildcard
 						function(channelProxy) {
-							$('#availableChannels').append(channelProxy.namespace + "\n");
+							console.log("found channel: " + channelProxy.namespace);
+							// make the proxy available now that we are successfully connected
+							connectedChannels[channelProxy.namespace] = channelProxy;		
+
 							if(channelProxy.namespace !== ownChannelAddress) {
-								connectToChannel(channelProxy);		
+								$('#channels').append($('<option>' + channelProxy.namespace + '</option>'));
  							}
+							connectToChannel(channelProxy);		
 						},
 						// callback invoked when the search query is accepted for processing
 						function(success) {
@@ -76,15 +80,10 @@
                 // callback invoked to receive messages, only after successful connect
                 function(message) {
                     alert("Client received message from creator: " + message.contents);
-                    // we directly reply to the message, and here we send a message to
-                    // the sender only (i.e. the creator in this example)
-                    sendMessageTo(message.from, "client.pong", channelProxy);
                 },
                 // callback invoked when the client is successfully connected (i.e. authorized by the creator)
                 function(success) {
-                  // make the proxy available now that we are successfully connected
-									connectedChannels[channelProxy.namespace] = channelProxy;		
-									$('#channels').append($('<option>' + channelProxy.namespace + '</option>'));	
+                  	console.log("Connected from " + connectedChannels[ownChannelAddress].namespace + " to " + channelProxy.namespace);
                 },
                 function(error) {
                     alert("Could not connect to channel: " + error.message);
@@ -104,6 +103,7 @@
 					var properties = {};
           // we allow all channel clients to send and receive
           properties.mode = "send-receive";
+					properties.channelOwner = "gr-handheld";
 
           var config = {};
           // the namespace is an URN which uniquely defines the channel in the personal zone
@@ -116,6 +116,7 @@
                   config,
                   // callback invoked when a client want to connect to the channel
                   function(request) {
+											console.log("received connection request. Return true.");
                       // we allow all clients to connect (we could also for example check some application-
                       // specific information in the request.requestInfo to make a decision)
                       return true;
@@ -126,11 +127,14 @@
                   },
                   // callback invoked on success, with the client's channel proxy as parameter
                   function(channelProxy) {
+											console.log("Successfully created channel: " + channelProxy.namespace);
                       connectedChannels[ownChannelAddress] = channelProxy;
+											searchChannels();
                   },
                   function(error) {
-                      console.log("Could not create channel: " + error.message);
-                  }
+                  	console.log("Could not create channel: " + error.message);
+										searchChannels();
+									}
           );
 				}	
 
@@ -158,8 +162,7 @@
 					}
 
 					// send message to specific client
-          ownChannel.sendTo(
-            receiver,
+          ownChannel.send(
           	message,
 						// callback invoked when the message is accepted for processing
 						function(success) {
@@ -181,6 +184,15 @@
 
 				$('#btn_send').click(sendMessage);
 
+				$('#btn_close_channels').click(function() {
+					
+					var key;
+					for(key in connectedChannels) {
+						connectedChannels[key].disconnect(function(){alert("success");}, function(){alert("failure");});					
+					}
+		
+				});
+
 				//listener ensures, that the webinos.session object is initialized.
 				webinos.session.addListener('registeredBrowser', function () {
 					initApp2App();
@@ -201,6 +213,7 @@
 				<input type="button" id="btn_clr_received" value="Clear">
 			</div>
 			<select id="channels" size="5" width="500" style="width: 500px"></select>
+			<input type="button" id="btn_close_channels" value="Close channels">
 			<div id="availableChannels"/>
 	</body>
 </html>
