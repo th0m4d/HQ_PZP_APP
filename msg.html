@@ -15,8 +15,16 @@
 				var app2app;
 				var connectedChannels = [];
 				var GR_URN = "urn:service:*";
+				var pzpId;
 
 				var initApp2App = function () {
+
+					pzpId = webinos.session.getPZPId();
+					if(typeof pzpId === "undefined" || pzpId.length == 0) {
+						alert("Couldnt find pzp. Please refresh page.");
+						return;
+					}
+
 					webinos.discovery.findServices(new ServiceType("http://webinos.org/api/app2app"), {
 							onFound: function (service) {
 											service.bindService({
@@ -35,10 +43,7 @@
 
 				var connectToChannels = function ()  {
 
-					var pzpId = webinos.session.getPZPId();
-					if(typeof pzpId === "undefined" || pzpId.length == 0) {
-						return;
-					}
+					
 				
 					app2app.searchForChannels(
 						// the namespace to search for (can include a wildcard "*" instead of "example"
@@ -63,10 +68,6 @@
 
 				var createChannel = function() {
 
-					var pzpId = webinos.session.getPZPId();
-					if(typeof pzpId === "undefined" || pzpId.length == 0) {
-						return;
-					}
 					var ownChannel = connectedChannels[pzpId];
 
 					if (typeof ownChannel !== "undefined") {
@@ -102,17 +103,13 @@
                       ownChannel = channelProxy;
                   },
                   function(error) {
-                      alert("Could not create channel: " + error.message);
+                      console.log("Could not create channel: " + error.message);
                   }
           );
 				}	
 
 				var sendMessage = function() {
 					//set sender
-					var pzpId = webinos.session.getPZPId();
-					if(typeof pzpId === "undefined" || pzpId.length == 0) {
-						return;
-					}
 					var ownChannel = connectedChannels[pzpId];
 					if (typeof ownChannel === "undefined") {
 						alert("Message couldnt be send. No channel available.");
@@ -148,8 +145,8 @@
 					);									
 				}
 
-				initApp2App();
-
+				//Event listeners	
+								
 				$('#serviceProviders').change(function() {
 					var value = $('#serviceProviders').val();				
 					var channel = connectedChannels[value];	
@@ -157,6 +154,12 @@
 				});
 
 				$('#btn_send').click(sendMessage);
+
+				//listener ensures, that the webinos.session object is initialized.
+				webinos.session.addListener('registeredBrowser', function () {
+					initApp2App();
+				});
+				
 			});
 		</script>
   </head>
