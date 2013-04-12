@@ -13,66 +13,131 @@
 			$(document).ready(function () {
 				
 				var app2app;
-				var connectedChannels = [];
-				var GR_URN_BASE = "urn:service:";
-				var ownChannelAddress;
+        var creatorChannelProxy;
+        var clientChannelProxy;
+				var URN = "urn:gr-logistics:handheld-ap";
 
-				var initApp2App = function () {
+        var init = function () {
+            webinos.discovery.findServices(new ServiceType("http://webinos.org/api/app2app"), {
+                onFound: function (service) {
+                    service.bindService({
+                        onBind: function () {
+														if(typeof app2app === "undefined") {
+	                            app2app = service;
+															createChannel();
+															searchChannel();
+														}
+                        }
+                    });
+                },
+                onError: function (error) {
+                    alert("Error finding service: " + error.message + " (#" + error.code + ")");
+                }
+            });
+        };
 
-					var pzpId = webinos.session.getPZPId();
-					if(typeof pzpId === "undefined" || pzpId.length == 0) {
-						alert("Couldnt find pzp. Please refresh page.");
-						return;
-					}
-					ownChannelAddress = GR_URN_BASE + pzpId;
+        var createChannel = function () {
+            var properties = {};
+            // we allow all channel clients to send and receive
+            properties.mode = "send-receive";
 
-					webinos.discovery.findServices(new ServiceType("http://webinos.org/api/app2app"), {
-							onFound: function (service) {
-											service.bindService({
-											onBind: function () {
-												console.log("app2app service found and bound.");
-												app2app = service;
-												createChannel();	
-											}
-									});
-							},
-							onError: function (error) {
-									alert("Error finding service: " + error.message + " (#" + error.code + ")");
-							}
-					});
+            var config = {};
+            // the namespace is an URN which uniquely defines the channel in the personal zone
+            config.namespace = URN;
+            config.properties = properties;
+            // we can attach application-specific information to the channel
+            config.appInfo = {};
+
+            app2app.createChannel(
+                    config,
+                    // callback invoked when a client want to connect to the channel
+                    function(request) {
+                        // we allow all clients to connect (we could also for example check some application-
+                        // specific information in the request.requestInfo to make a decision)
+                        return confirm("Do you allow the client to connect?");
+                    },
+                    // callback invoked to receive messages
+                    function(message) {
+                        alert("The channel creator received a message: " + message.contents);
+                    },
+                    // callback invoked on success, with the client's channel proxy as parameter
+                    function(channelProxy) {
+                        creatorChannelProxy = channelProxy;
+                    },
+                    function(error) {
+                        alert("Could not create channel: " + error.message);
+                    }
+            );
         }
 
-				var searchChannels = function ()  {
+        var sendBroadcast = function() {
+            if (typeof creatorChannelProxy === "undefined") {
+                alert("You first have to create the channel.");
+                return;
+            }
 
-					app2app.searchForChannels(
-						// the namespace to search for (can include a wildcard "*" instead of "example"
-						// to search for all channels with prefix "org-webinos")
-						GR_URN_BASE + "*",
-						// no other zones need to be searched, only its own personal zone
-						[],
-						// callback invoked on each channel found, we expect it to be called at most once
-						// because we did not use a wildcard
-						function(channelProxy) {
-							console.log("found channel: " + channelProxy.namespace);
-							// make the proxy available now that we are successfully connected
-							connectedChannels[channelProxy.namespace] = channelProxy;		
+            // send message to all connected clients (in our example this is only one)
+            creatorChannelProxy.send(
+                    "creator.ping",
+                    // callback invoked when the message is accepted for processing
+                    function(success) {
+                        // ok, but no action needed in our example
+                    },
+                    function(error) {
+                        alert("Could not send message: " + error.message);
+                    }
+            );
+        }
 
-							if(channelProxy.namespace !== ownChannelAddress) {
-								$('#channels').append($('<option>' + channelProxy.namespace + '</option>'));
- 							}
-							connectToChannel(channelProxy);		
-						},
-						// callback invoked when the search query is accepted for processing
-						function(success) {
-							// ok, but no action needed in our example
-						},
-						function(error) {
-							alert("Could not search for channel: " + error.message);
-						}
-					);
-				}
+       var sendMessage = function() {
+            if (typeof clientChannelProxy === "undefined") {
+                alert("You first have to connect to the channel.");
+                return;
+            }
 
-				 var connectToChannel = function(channelProxy) {
+            // send message to all connected clients (in our example this is only one)
+            clientChannelProxy.send(
+                    "client.ping",
+                    // callback invoked when the message is accepted for processing
+                    function(success) {
+                        // ok, but no action needed in our example
+                    },
+                    function(error) {
+                        alert("Could not send message: " + error.message);
+                    }
+            );
+        }
+
+        var searchChannel = function() {
+            if (typeof clientChannelProxy !== "undefined") {
+                alert("Already connected to the channel.");
+                return;
+            }
+
+            app2app.searchForChannels(
+                    // the namespace to search for (can include a wildcard "*" instead of "example"
+                    // to search for all channels with prefix "org-webinos")
+                    URN,
+                    // no other zones need to be searched, only its own personal zone
+                    [],
+                    // callback invoked on each channel found, we expect it to be called at most once
+                    // because we did not use a wildcard
+                    function(channelProxy) {
+                        // we directly request to connect to the channel
+                        connectToChannel(channelProxy);
+                    },
+                    // callback invoked when the search query is accepted for processing
+                    function(success) {
+                        // ok, but no action needed in our example
+                    },
+                    function(error) {
+                        alert("Could not search for channel: " + error.message);
+												createChannel();
+                    }
+            );
+        }
+
+        function connectToChannel(channelProxy) {
             // we can include application-specific information to the connect request
             var requestInfo = {};
             channelProxy.connect(
@@ -80,10 +145,14 @@
                 // callback invoked to receive messages, only after successful connect
                 function(message) {
                     alert("Client received message from creator: " + message.contents);
+                    // we directly reply to the message, and here we send a message to
+                    // the sender only (i.e. the creator in this example)
+                    sendMessageTo(message.from, "client.pong", channelProxy);
                 },
                 // callback invoked when the client is successfully connected (i.e. authorized by the creator)
                 function(success) {
-                  	console.log("Connected from " + connectedChannels[ownChannelAddress].namespace + " to " + channelProxy.namespace);
+                    // make the proxy available now that we are successfully connected
+                    clientChannelProxy = channelProxy;
                 },
                 function(error) {
                     alert("Could not connect to channel: " + error.message);
@@ -91,112 +160,23 @@
             );
         }
 
-				var createChannel = function() {
+        function sendMessageTo(client, message, channelProxy) {
+            // send message to a single client only
+            // alternatively you can send to all clients on the channel using channelProxy.send
+            channelProxy.sendTo(
+                client,
+                message,
+                // callback invoked when the message is accepted for processing
+                function(success) {
+                    // ok, but no action needed in our example
+                },
+                function(error) {
+                    alert("Could not send message: " + error.message);
+                }
+            );
+        }
 
-					var ownChannel = connectedChannels[ownChannelAddress];
-
-					if (typeof ownChannel !== "undefined") {
-						alert("Channel is already created.");
-						return;
-					}
-					
-					var properties = {};
-          // we allow all channel clients to send and receive
-          properties.mode = "send-receive";
-					properties.channelOwner = "gr-handheld";
-
-          var config = {};
-          // the namespace is an URN which uniquely defines the channel in the personal zone
-          config.namespace = ownChannelAddress;
-          config.properties = properties;
-          // we can attach application-specific information to the channel
-          config.appInfo = {serviceAddress: app2app.serviceAddress};
-
-          app2app.createChannel(
-                  config,
-                  // callback invoked when a client want to connect to the channel
-                  function(request) {
-											console.log("received connection request. Return true.");
-                      // we allow all clients to connect (we could also for example check some application-
-                      // specific information in the request.requestInfo to make a decision)
-                      return true;
-                  },
-                  // callback invoked to receive messages
-                  function(message) {
-                      alert("The channel creator received a message: " + message.contents);
-                  },
-                  // callback invoked on success, with the client's channel proxy as parameter
-                  function(channelProxy) {
-											console.log("Successfully created channel: " + channelProxy.namespace);
-                      connectedChannels[ownChannelAddress] = channelProxy;
-											searchChannels();
-                  },
-                  function(error) {
-                  	console.log("Could not create channel: " + error.message);
-										searchChannels();
-									}
-          );
-				}	
-
-				var sendMessage = function() {
-					//set sender
-					var ownChannel = connectedChannels[ownChannelAddress];
-					if (typeof ownChannel === "undefined") {
-						alert("Message couldnt be send. No channel available.");
-						return;
-					}
-
-					//set receiver
-					var receiverId = $('#channels').val();
-					var receiver = connectedChannels[receiverId];
-					if (typeof receiver === "undefined") {
-						alert("You have to select a receiver in the list.");
-						return;
-					}
-
-					//set message
-					var message = $('#msg_send').val();
-					if (message.length == 0) {
-						alert("There is no message to send!");
-						return;
-					}
-
-					// send message to specific client
-          ownChannel.send(
-          	message,
-						// callback invoked when the message is accepted for processing
-						function(success) {
-							// ok, but no action needed in our example
-						},
-						function(error) {
-							alert("Could not send message: " + error.message);
-						}
-					);									
-				}
-
-				//Event listeners	
-								
-				$('#serviceProviders').change(function() {
-					var value = $('#serviceProviders').val();				
-					var channel = connectedChannels[value];	
-					disconnectChannel(channel);
-				});
-
-				$('#btn_send').click(sendMessage);
-
-				$('#btn_close_channels').click(function() {
-					
-					var key;
-					for(key in connectedChannels) {
-						connectedChannels[key].disconnect(function(){alert("success");}, function(){alert("failure");});					
-					}
-		
-				});
-
-				//listener ensures, that the webinos.session object is initialized.
-				webinos.session.addListener('registeredBrowser', function () {
-					initApp2App();
-				});
+			init();
 				
 			});
 		</script>
