@@ -15,7 +15,7 @@
 				var app2app;
         var creatorChannelProxy;
         var clientChannelProxy;
-				var URN = "urn:gr-logistics:handheld-ap";
+				var URN = "urn:gr-logistics:handheld-ap:test";
 
         var init = function () {
             webinos.discovery.findServices(new ServiceType("http://webinos.org/api/app2app"), {
@@ -25,7 +25,6 @@
 														if(typeof app2app === "undefined") {
 	                            app2app = service;
 															createChannel();
-															searchChannel();
 														}
                         }
                     });
@@ -124,6 +123,7 @@
                     // because we did not use a wildcard
                     function(channelProxy) {
                         // we directly request to connect to the channel
+			console.log("Found channel: " + channelProxy.namespace);
                         connectToChannel(channelProxy);
                     },
                     // callback invoked when the search query is accepted for processing
@@ -137,7 +137,7 @@
             );
         }
 
-        function connectToChannel(channelProxy) {
+        var connectToChannel = function(channelProxy) {
             // we can include application-specific information to the connect request
             var requestInfo = {};
             channelProxy.connect(
@@ -152,6 +152,7 @@
                 // callback invoked when the client is successfully connected (i.e. authorized by the creator)
                 function(success) {
                     // make the proxy available now that we are successfully connected
+			console.log("Connected to channel: " + channelProxy.namespace);
                     clientChannelProxy = channelProxy;
                 },
                 function(error) {
@@ -160,7 +161,7 @@
             );
         }
 
-        function sendMessageTo(client, message, channelProxy) {
+        var sendMessageTo = function(client, message, channelProxy) {
             // send message to a single client only
             // alternatively you can send to all clients on the channel using channelProxy.send
             channelProxy.sendTo(
