@@ -15,7 +15,18 @@
 				var app2app;
         var creatorChannelProxy;
         var clientChannelProxy;
-				var URN = "urn:gr-logistics:handheld-ap:test";
+
+				var get4DigitHash = function () {
+					return Math.floor((1 + Math.random()) * 0x10000)
+								     .toString(16)
+								     .substring(1);
+				}	
+
+				var getNewURN = function() {
+					return "urn:gr-logistics:headquarter:" + get4DigitHash() + get4DigitHash();				
+				}
+
+				var URN = getNewURN();
 
         var init = function () {
             webinos.discovery.findServices(new ServiceType("http://webinos.org/api/app2app"), {
