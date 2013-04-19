@@ -134,7 +134,7 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
   }
 
 
- this.sendMessageo = function(client) {
+ this.sendMessageTo = function(id, success, failure) {
       if (typeof myChannelProxy === "undefined") {
           alert("You first have to connect to the channel.");
           return;

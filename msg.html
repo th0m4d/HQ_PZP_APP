@@ -13,14 +13,19 @@
     <script type="text/javascript">
       $(document).ready(function () {
 
+        var handleMessage = function(message) {
+          if(message.contents.type == );
+          $('#msg_receive').append(message.contents.message + "<br><br>");
+        }
+        
         var messaging = new GRMessaging(function() {
           messaging.searchChannel();
         }, function(message) {
           console.log("== Received message!");
-          $('#msg_receive').append(message.contents + "\ņ\n");
-        });   
+          handleMessage(message);
+        });
 
-        $('#btn_send').click(function(){sendMessage();});
+        $('#btn_send').click(function(){messaging.sendBroadcast();});
         $('#btn_reconnect').click(function(){connectToNextChannel();});
 
       });
@@ -30,16 +35,12 @@
     <h1>Handheld App</h1>
       <div id="top_buttons">
         <input type="button" id="btn_send" value="Send Message">
-        <input type="button" id="btn_send_hq" value="Send to headquarter">
+        <input type="button" id="btn_clr_received" value="Clear">
+        <input type="button" id="btn_reconnect" value="Reconnect">
       </div>
       <textarea id="msg_send" cols="50" rows="10">Hello World!</textarea>
-      <div id="msg_receive" style="height:300px;width:500px;max-height:300px;overflow:auto;"/>
-      <div id="bottom_buttons">
-        <input type="button" id="btn_clr_received" value="Clear">
-      </div>
+      <div id="msg_receive" style="height:150px;width:300px;max-height:300px;overflow:auto; border:thin solid black;"></div>
       <select id="channels" size="5" width="500" style="width: 500px"></select>
-      <input type="button" id="btn_close_channels" value="Close channels">
-      <input type="button" id="btn_reconnect" value="Reconnect">
       <div id="availableChannels"/>
   </body>
 </html>

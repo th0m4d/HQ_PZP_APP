@@ -4,7 +4,16 @@ $(document).ready(function () {
 	var vehicles = [];
 	var currentSelection;
 
-	jQuery("#vehicles").change(goToMarker);
+  var handleMessage = function(message) {
+    $('#msg_receive').append(message.contents.message + "<br><br>");
+  }
+
+  var messaging = new GRMessaging(function() {
+    messaging.searchChannel();
+  }, function(message) {
+    console.log("== Received message!");
+    handleMessage(message);
+  });
 
 	//log messages
 	function printInfo(data) {
@@ -103,6 +112,10 @@ $(document).ready(function () {
 		}
 		$('#noServiceVehicles').find('option[value=\'' + serviceAddress + '\']').remove();
 		vehicles[serviceAddress] = new GRVehicle(map, serviceAddress, noServiceCallback);
-	});
+  });
+
+  $('#btn_send').click(function(){messaging.sendBroadcast();});
+  $('#btn_reconnect').click(function(){connectToNextChannel();});
+  jQuery("#vehicles").change(goToMarker);
 
 });
