@@ -13,20 +13,10 @@
 			$(document).ready(function () {
 				
 				var app2app;
-        var creatorChannelProxy;
-        var clientChannelProxy;
+        var myChannelProxy;
+				var obsoleteChannels = [];
 
-				var get4DigitHash = function () {
-					return Math.floor((1 + Math.random()) * 0x10000)
-								     .toString(16)
-								     .substring(1);
-				}	
-
-				var getNewURN = function() {
-					return "urn:gr-logistics:headquarter:" + get4DigitHash() + get4DigitHash();				
-				}
-
-				var URN = getNewURN();
+				var URN = "urn:gr-logistics:*";
 
         var init = function () {
             webinos.discovery.findServices(new ServiceType("http://webinos.org/api/app2app"), {
@@ -35,7 +25,8 @@
                         onBind: function () {
 														if(typeof app2app === "undefined") {
 	                            app2app = service;
-															createChannel();
+															window.onbeforeunload = function() {unbindApp2AppService()};
+															searchChannel();		
 														}
                         }
                     });
@@ -45,6 +36,16 @@
                 }
             });
         };
+
+				var unbindApp2AppService = function() {
+					if (typeof app2app === "undefined") {
+						alert("App2app service is not available.");
+						return;
+          }
+
+					app2app.unbind();
+					
+				}
 
         var createChannel = function () {
             var properties = {};
@@ -72,7 +73,21 @@
                     },
                     // callback invoked on success, with the client's channel proxy as parameter
                     function(channelProxy) {
-                        creatorChannelProxy = channelProxy;
+                        myChannelProxy = channelProxy;
+												connectToChannel(channelProxy);
+												window.onbeforeunload = function() {
+				                  channelProxy.send(
+				                    {action: "creatorLeaves", message: service.serviceAddress},
+				                  // callback invoked when the message is accepted for processing
+				                  function(success) {
+				                    // ok, but no action needed in our example
+				                  },
+				                    function(error) {
+				                      console.log("Could not send message: " + error.message);
+				                    }
+				                  );
+				                  channelProxy.disconnect();
+                    		};
                     },
                     function(error) {
                         alert("Could not create channel: " + error.message);
@@ -81,13 +96,13 @@
         }
 
         var sendBroadcast = function() {
-            if (typeof creatorChannelProxy === "undefined") {
+            if (typeof myChannelProxy === "undefined") {
                 alert("You first have to create the channel.");
                 return;
             }
 
             // send message to all connected clients (in our example this is only one)
-            creatorChannelProxy.send(
+            myChannelProxy.send(
                     "creator.ping",
                     // callback invoked when the message is accepted for processing
                     function(success) {
@@ -100,13 +115,13 @@
         }
 
        var sendMessage = function() {
-            if (typeof clientChannelProxy === "undefined") {
+            if (typeof myChannelProxy === "undefined") {
                 alert("You first have to connect to the channel.");
                 return;
             }
 
             // send message to all connected clients (in our example this is only one)
-            clientChannelProxy.send(
+            myChannelProxy.send(
                     "client.ping",
                     // callback invoked when the message is accepted for processing
                     function(success) {
@@ -119,7 +134,7 @@
         }
 
         var searchChannel = function() {
-            if (typeof clientChannelProxy !== "undefined") {
+            if (typeof myChannelProxy !== "undefined") {
                 alert("Already connected to the channel.");
                 return;
             }
@@ -134,8 +149,10 @@
                     // because we did not use a wildcard
                     function(channelProxy) {
                         // we directly request to connect to the channel
-			console.log("Found channel: " + channelProxy.namespace);
-                        connectToChannel(channelProxy);
+												console.log("Found channel: " + channelProxy.namespace);
+												if(!(channelProxy.namespace in obsoleteChannels)) {
+													connectToChannel(channelProxy);
+												}	
                     },
                     // callback invoked when the search query is accepted for processing
                     function(success) {
@@ -162,15 +179,31 @@
                 },
                 // callback invoked when the client is successfully connected (i.e. authorized by the creator)
                 function(success) {
-                    // make the proxy available now that we are successfully connected
-			console.log("Connected to channel: " + channelProxy.namespace);
-                    clientChannelProxy = channelProxy;
+                  // make the proxy available now that we are successfully connected
+									console.log("Connected to channel: " + channelProxy.namespace);
+                  myChannelProxy = channelProxy;
                 },
                 function(error) {
                     alert("Could not connect to channel: " + error.message);
                 }
             );
         }
+				var connectToNextChannel = function() {
+
+					if (typeof myChannelProxy === "undefined") {
+						alert("Not connected to a channel.");
+						return;
+					}
+
+					myChannelProxy.disconnect(function(){
+						obsoleteChannels[myChannelProxy.namespace] = myChannelProxy;		
+						myChannelProxy = undefined;
+						searchChannel();
+					}, function(error){
+						console.log(error.message);					
+					});
+					
+				}
 
         var sendMessageTo = function(client, message, channelProxy) {
             // send message to a single client only
@@ -190,6 +223,7 @@
 
 			init();
 			$('#btn_send').click(function(){sendMessage();});
+			$('#btn_reconnect').click(function(){connectToNextChannel();});
 				
 			});
 		</script>
@@ -207,6 +241,7 @@
 			</div>
 			<select id="channels" size="5" width="500" style="width: 500px"></select>
 			<input type="button" id="btn_close_channels" value="Close channels">
+			<input type="button" id="btn_reconnect" value="Reconnect">
 			<div id="availableChannels"/>
 	</body>
 </html>
