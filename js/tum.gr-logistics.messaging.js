@@ -3,7 +3,18 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
   var app2app;
   var myChannelProxy;
   var obsoleteChannels = [];
-  var URN = "urn:gr-logistics:*";
+  
+  var get4DigitHash = function () {
+    return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+  }
+
+  var getNewURN = function() {
+    return "urn:gr-logistics:headquarter:" + get4DigitHash() + get4DigitHash();
+  }
+
+  var URN = getNewURN();
 
   var unbindApp2AppService = function() {
     if (typeof app2app === "undefined") {
@@ -40,10 +51,9 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
               // callback invoked on success, with the client's channel proxy as parameter
               function(channelProxy) {
                   myChannelProxy = channelProxy;
-                  connectToChannel(channelProxy);
                   window.onbeforeunload = function() {
                     channelProxy.send(
-                      {action: "creatorLeaves", message: service.serviceAddress},
+                      {action: "creatorLeaves", message: app2app.serviceAddress},
                     // callback invoked when the message is accepted for processing
                     function(success) {
                       // ok, but no action needed in our example
