@@ -13,8 +13,7 @@
 			$(document).ready(function () {
 				
 				var app2app;
-        var creatorChannelProxy;
-        var clientChannelProxy;
+        var myChannelProxy;
 
 				var get4DigitHash = function () {
 					return Math.floor((1 + Math.random()) * 0x10000)
@@ -72,7 +71,22 @@
                     },
                     // callback invoked on success, with the client's channel proxy as parameter
                     function(channelProxy) {
-                        creatorChannelProxy = channelProxy;
+                        myChannelProxy = channelProxy;
+												$('#availableChannels').text("Created channel" + channelProxy.namespace);
+												console.log("Created channel" + channelProxy.namespace);
+												window.onbeforeunload = function() {
+								          myChannelProxy.send(
+								            {action: "creatorLeaves", message: service.serviceAddress},
+								          // callback invoked when the message is accepted for processing
+								          function(success) {
+								            // ok, but no action needed in our example
+								          },
+								            function(error) {
+								              console.log("Could not send message: " + error.message);
+								            }
+								          );
+								          myChannelProxy.disconnect();
+                    		};
                     },
                     function(error) {
                         alert("Could not create channel: " + error.message);
@@ -81,13 +95,13 @@
         }
 
         var sendBroadcast = function() {
-            if (typeof creatorChannelProxy === "undefined") {
+            if (typeof myChannelProxy === "undefined") {
                 alert("You first have to create the channel.");
                 return;
             }
 
             // send message to all connected clients (in our example this is only one)
-            creatorChannelProxy.send(
+            myChannelProxy.send(
                     "creator.ping",
                     // callback invoked when the message is accepted for processing
                     function(success) {
@@ -100,13 +114,13 @@
         }
 
        var sendMessage = function() {
-            if (typeof clientChannelProxy === "undefined") {
+            if (typeof myChannelProxy === "undefined") {
                 alert("You first have to connect to the channel.");
                 return;
             }
 
             // send message to all connected clients (in our example this is only one)
-            clientChannelProxy.send(
+            myChannelProxy.send(
                     "client.ping",
                     // callback invoked when the message is accepted for processing
                     function(success) {
@@ -119,7 +133,7 @@
         }
 
         var searchChannel = function() {
-            if (typeof clientChannelProxy !== "undefined") {
+            if (typeof myChannelProxy !== "undefined") {
                 alert("Already connected to the channel.");
                 return;
             }
@@ -133,9 +147,9 @@
                     // callback invoked on each channel found, we expect it to be called at most once
                     // because we did not use a wildcard
                     function(channelProxy) {
-                        // we directly request to connect to the channel
-			console.log("Found channel: " + channelProxy.namespace);
-                        connectToChannel(channelProxy);
+                      // we directly request to connect to the channel
+											console.log("Found channel: " + channelProxy.namespace);
+                      connectToChannel(channelProxy);
                     },
                     // callback invoked when the search query is accepted for processing
                     function(success) {
@@ -163,8 +177,8 @@
                 // callback invoked when the client is successfully connected (i.e. authorized by the creator)
                 function(success) {
                     // make the proxy available now that we are successfully connected
-			console.log("Connected to channel: " + channelProxy.namespace);
-                    clientChannelProxy = channelProxy;
+										console.log("Connected to channel: " + channelProxy.namespace);
+                    myChannelProxy = channelProxy;
                 },
                 function(error) {
                     alert("Could not connect to channel: " + error.message);
