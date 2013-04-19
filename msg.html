@@ -1,33 +1,33 @@
 <html>
-	<head>
-		<title>Handheld App</title>
-		<link rel="stylesheet" href="./css/main.css" />
-		<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
-		<!--[if lte IE 8]>
-    	<link rel="stylesheet" src="./css/leaflet.ie.css" />
-		<![endif]-->
+  <head>
+    <title>Handheld App</title>
+    <link rel="stylesheet" href="./css/main.css" />
+    <link rel="stylesheet" href="./js/leaflet/leaflet.css" />
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" src="./css/leaflet.ie.css" />
+    <![endif]-->
     <script type="text/javascript" src="./js/webinos.js"></script>
-		<script type="text/javascript" src="./js/leaflet/leaflet.js"></script>
-		<script type="text/javascript" src="./js/jquery-1.8.2.min.js"></script>
-		<script type="text/javascript">
-			$(document).ready(function () {
-				
-				var app2app;
-        var myChannelProxy;
-				var obsoleteChannels = [];
+    <script type="text/javascript" src="./js/leaflet/leaflet.js"></script>
+    <script type="text/javascript" src="./js/jquery-1.8.2.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
 
-				var URN = "urn:gr-logistics:*";
+        var app2app;
+        var myChannelProxy;
+        var obsoleteChannels = [];
+
+        var URN = "urn:gr-logistics:*";
 
         var init = function () {
             webinos.discovery.findServices(new ServiceType("http://webinos.org/api/app2app"), {
                 onFound: function (service) {
                     service.bindService({
                         onBind: function () {
-														if(typeof app2app === "undefined") {
-	                            app2app = service;
-															window.onbeforeunload = function() {unbindApp2AppService()};
-															searchChannel();		
-														}
+                          if(typeof app2app === "undefined") {
+                            app2app = service;
+                            window.onbeforeunload = function() {unbindApp2AppService()};
+                            searchChannel();
+                          }
                         }
                     });
                 },
@@ -37,15 +37,13 @@
             });
         };
 
-				var unbindApp2AppService = function() {
-					if (typeof app2app === "undefined") {
-						alert("App2app service is not available.");
-						return;
+        var unbindApp2AppService = function() {
+          if (typeof app2app === "undefined") {
+            alert("App2app service is not available.");
+            return;
           }
-
-					app2app.unbind();
-					
-				}
+          app2app.unbind();
+        }
 
         var createChannel = function () {
             var properties = {};
@@ -74,19 +72,19 @@
                     // callback invoked on success, with the client's channel proxy as parameter
                     function(channelProxy) {
                         myChannelProxy = channelProxy;
-												connectToChannel(channelProxy);
-												window.onbeforeunload = function() {
-				                  channelProxy.send(
-				                    {action: "creatorLeaves", message: service.serviceAddress},
-				                  // callback invoked when the message is accepted for processing
-				                  function(success) {
-				                    // ok, but no action needed in our example
-				                  },
-				                    function(error) {
-				                      console.log("Could not send message: " + error.message);
-				                    }
-				                  );
-				                  channelProxy.disconnect();
+                        connectToChannel(channelProxy);
+                        window.onbeforeunload = function() {
+                          channelProxy.send(
+                            {action: "creatorLeaves", message: service.serviceAddress},
+                          // callback invoked when the message is accepted for processing
+                          function(success) {
+                            // ok, but no action needed in our example
+                          },
+                            function(error) {
+                              console.log("Could not send message: " + error.message);
+                            }
+                          );
+                          channelProxy.disconnect();
                     		};
                     },
                     function(error) {
@@ -149,18 +147,18 @@
                     // because we did not use a wildcard
                     function(channelProxy) {
                         // we directly request to connect to the channel
-												console.log("Found channel: " + channelProxy.namespace);
-												if(!(channelProxy.namespace in obsoleteChannels)) {
-													connectToChannel(channelProxy);
-												}	
+                        console.log("Found channel: " + channelProxy.namespace);
+                        if(!(channelProxy.namespace in obsoleteChannels)) {
+                          connectToChannel(channelProxy);
+                        }
                     },
                     // callback invoked when the search query is accepted for processing
                     function(success) {
                         // ok, but no action needed in our example
                     },
                     function(error) {
-                        alert("Could not search for channel: " + error.message);
-												createChannel();
+                      alert("Could not search for channel: " + error.message);
+                      createChannel();
                     }
             );
         }
@@ -180,7 +178,7 @@
                 // callback invoked when the client is successfully connected (i.e. authorized by the creator)
                 function(success) {
                   // make the proxy available now that we are successfully connected
-									console.log("Connected to channel: " + channelProxy.namespace);
+                  console.log("Connected to channel: " + channelProxy.namespace);
                   myChannelProxy = channelProxy;
                 },
                 function(error) {
@@ -188,22 +186,23 @@
                 }
             );
         }
-				var connectToNextChannel = function() {
 
-					if (typeof myChannelProxy === "undefined") {
-						alert("Not connected to a channel.");
-						return;
-					}
+        var connectToNextChannel = function() {
 
-					myChannelProxy.disconnect(function(){
-						obsoleteChannels[myChannelProxy.namespace] = myChannelProxy;		
-						myChannelProxy = undefined;
-						searchChannel();
-					}, function(error){
-						console.log(error.message);					
-					});
-					
-				}
+          if (typeof myChannelProxy === "undefined") {
+            alert("Not connected to a channel.");
+            return;
+          }
+
+          myChannelProxy.disconnect(function(){
+            obsoleteChannels[myChannelProxy.namespace] = myChannelProxy;		
+            myChannelProxy = undefined;
+            searchChannel();
+          }, function(error){
+            console.log(error.message);
+          });
+
+        }
 
         var sendMessageTo = function(client, message, channelProxy) {
             // send message to a single client only
@@ -221,27 +220,27 @@
             );
         }
 
-			init();
-			$('#btn_send').click(function(){sendMessage();});
-			$('#btn_reconnect').click(function(){connectToNextChannel();});
-				
-			});
-		</script>
+      init();
+      $('#btn_send').click(function(){sendMessage();});
+      $('#btn_reconnect').click(function(){connectToNextChannel();});
+
+      });
+    </script>
   </head>
   <body>
-  	<h1>Handheld App</h1>
-			<div id="top_buttons">
-				<input type="button" id="btn_send" value="Send Message">
-				<input type="button" id="btn_send_hq" value="Send to headquarter">
-			</div>		
-			<textarea id="msg_send" cols="50" rows="10">Hello World!</textarea>
-			<div id="msg_receive" style="height:300px;width:500px;max-height:300px;overflow:auto;"/>
-			<div id="bottom_buttons">
-				<input type="button" id="btn_clr_received" value="Clear">
-			</div>
-			<select id="channels" size="5" width="500" style="width: 500px"></select>
-			<input type="button" id="btn_close_channels" value="Close channels">
-			<input type="button" id="btn_reconnect" value="Reconnect">
-			<div id="availableChannels"/>
-	</body>
+    <h1>Handheld App</h1>
+      <div id="top_buttons">
+        <input type="button" id="btn_send" value="Send Message">
+        <input type="button" id="btn_send_hq" value="Send to headquarter">
+      </div>
+      <textarea id="msg_send" cols="50" rows="10">Hello World!</textarea>
+      <div id="msg_receive" style="height:300px;width:500px;max-height:300px;overflow:auto;"/>
+      <div id="bottom_buttons">
+        <input type="button" id="btn_clr_received" value="Clear">
+      </div>
+      <select id="channels" size="5" width="500" style="width: 500px"></select>
+      <input type="button" id="btn_close_channels" value="Close channels">
+      <input type="button" id="btn_reconnect" value="Reconnect">
+      <div id="availableChannels"/>
+  </body>
 </html>
