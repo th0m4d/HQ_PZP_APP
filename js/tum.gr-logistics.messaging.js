@@ -3,7 +3,8 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
   var app2app;
   var myChannelProxy;
   var obsoleteChannels = [];
-  
+  var URN_BASE = "urn:gr-logistics:";
+  var SEARCH_URN = URN_BASE+ "*";
   var get4DigitHash = function () {
     return Math.floor((1 + Math.random()) * 0x10000)
             .toString(16)
@@ -11,7 +12,7 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
   }
 
   var getNewURN = function() {
-    return "urn:gr-logistics:headquarter:" + get4DigitHash() + get4DigitHash();
+    return URN_BASE + get4DigitHash() + get4DigitHash();
   }
 
   var URN = getNewURN();
@@ -81,7 +82,7 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
       app2app.searchForChannels(
               // the namespace to search for (can include a wildcard "*" instead of "example"
               // to search for all channels with prefix "org-webinos")
-              URN,
+               SEARCH_URN,
               // no other zones need to be searched, only its own personal zone
               [],
               // callback invoked on each channel found, we expect it to be called at most once
