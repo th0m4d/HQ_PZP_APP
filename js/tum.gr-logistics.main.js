@@ -9,7 +9,7 @@ $(document).ready(function () {
   }
 
   var messaging = new GRMessaging(function() {
-    messaging.searchChannel();
+    messaging.createChannel();
   }, function(message) {
     console.log("== Received message!");
     handleMessage(message);
