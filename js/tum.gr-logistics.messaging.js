@@ -51,6 +51,7 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
               // callback invoked on success, with the client's channel proxy as parameter
               function(channelProxy) {
                   myChannelProxy = channelProxy;
+                  console.log("Created channel: " + channelProxy.namespace);
                   window.onbeforeunload = function() {
                     channelProxy.send(
                       {action: "creatorLeaves", message: app2app.serviceAddress},
@@ -130,9 +131,14 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
         return;
     }
 
+    var message = new Object();
+    message.id = "id";
+    message.type = "broadcast";
+    message.message = $('#msg_send').val();
+
     // send message to all connected clients (in our example this is only one)
     myChannelProxy.send(
-            "Broadcast: " + $('#msg_send').val(),
+            message,
             // callback invoked when the message is accepted for processing
             function(success) {
               $('#msg_send').empty();
@@ -144,15 +150,20 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
   }
 
 
- this.sendMessageTo = function(id, success, failure) {
-      if (typeof myChannelProxy === "undefined") {
-          alert("You first have to connect to the channel.");
-          return;
-      }
+  this.sendMessageTo = function(id, success, failure) {
+    if (typeof myChannelProxy === "undefined") {
+        alert("You first have to connect to the channel.");
+        return;
+    }
+
+    var message = new Object();
+    message.id = webinos.session.getPZPId();
+    message.type = "unicast";
+    message.message = $('#msg_send').val();
 
       // send message to all connected clients (in our example this is only one)
       myChannelProxy.send(
-              "client.ping",
+              message,
               // callback invoked when the message is accepted for processing
               function(success) {
                   // ok, but no action needed in our example
