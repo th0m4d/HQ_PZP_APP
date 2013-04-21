@@ -118,7 +118,7 @@ $(document).ready(function () {
   $('#btn_send_bc').click(function(){messaging.sendBroadcast(
     $('#msg_send').val(),
     function(success) {
-      $('#msg_send').empty();
+      $('#msg_send').val('');
     },
     function(error) {
         alert("Could not send message: " + error.message);
@@ -130,7 +130,7 @@ $(document).ready(function () {
       $('#vehicles').val(),
       $('#msg_send').val(),
     function(success) {
-      $('#msg_send').empty();
+      $('#msg_send').val('');
     },
     function(error) {
         alert("Could not send message: " + error.message);
