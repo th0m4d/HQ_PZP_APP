@@ -5,36 +5,37 @@ $(document).ready(function () {
 	var currentSelection;
 
   var handleMessage = function(message) {
+    if(message.contents.type == "unicast" && message.contents.id != webinos.session.getPZPId()) {
+        //unicast message with wrong receipient id.
+        return;
+    }
     $('#msg_receive').append(message.contents.message + "<br><br>");
   }
 
   var messaging = new GRMessaging(function() {
     messaging.createChannel();
-  }, function(message) {
-    console.log("== Received message!");
-    handleMessage(message);
+  },handleMessage);
+
+  //log messages
+  function printInfo(data) {
+    $('#message').append('<li>'+data.payload.message+'</li>');
+  }
+  webinos.session.addListener('info', printInfo);
+  
+  //listener ensures, that the webinos.session object is initialized.
+  webinos.session.addListener('registeredBrowser', function () {
+    initOpenStreetMaps();
+    findServices();
   });
 
-	//log messages
-	function printInfo(data) {
-		$('#message').append('<li>'+data.payload.message+'</li>');
-	}
-	webinos.session.addListener('info', printInfo);
-	
-	//listener ensures, that the webinos.session object is initialized.
-	webinos.session.addListener('registeredBrowser', function () {
-		initOpenStreetMaps();
-		findServices();
-	});
+  function initOpenStreetMaps() {
+    // create a map in the "map" div, set the view to a given place and zoom
+    map = L.map('map').setView([51.505, -0.09], 13);
 
-	function initOpenStreetMaps() {
-		// create a map in the "map" div, set the view to a given place and zoom
-		map = L.map('map').setView([51.505, -0.09], 13);
-
-		// add an OpenStreetMap tile layer
-		L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-			  attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-		}).addTo(map);
+    // add an OpenStreetMap tile layer
+    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
 		// create a layer group for the vehicle markers		
 		vehicleLayer = L.layerGroup();
@@ -114,7 +115,27 @@ $(document).ready(function () {
 		vehicles[serviceAddress] = new GRVehicle(map, serviceAddress, noServiceCallback);
   });
 
-  $('#btn_send').click(function(){messaging.sendBroadcast();});
+  $('#btn_send_bc').click(function(){messaging.sendBroadcast(
+    $('#msg_send').val(),
+    function(success) {
+      $('#msg_send').empty();
+    },
+    function(error) {
+        alert("Could not send message: " + error.message);
+    });
+  });
+    
+  $('#btn_send_msg').click(function(){
+    messaging.sendMessageTo(
+      $('#vehicles').val(),
+      $('#msg_send').val(),
+    function(success) {
+      $('#msg_send').empty();
+    },
+    function(error) {
+        alert("Could not send message: " + error.message);
+    });
+  });
   $('#btn_reconnect').click(function(){connectToNextChannel();});
   jQuery("#vehicles").change(goToMarker);
 

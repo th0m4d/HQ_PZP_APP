@@ -47,7 +47,7 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
               },
               // callback invoked to receive messages
               function(message) {
-                  alert("The channel creator received a message: " + message.contents);
+                  incomingMessageCallback(message);
               },
               // callback invoked on success, with the client's channel proxy as parameter
               function(channelProxy) {
@@ -126,53 +126,39 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
       );
   }
   
-  this.sendBroadcast = function() {
+  this.sendBroadcast = function(message_text, success, failure) {
     if (typeof myChannelProxy === "undefined") {
         alert("You first have to create the channel.");
         return;
     }
 
     var message = new Object();
-    message.id = "id";
     message.type = "broadcast";
-    message.message = $('#msg_send').val();
+    message.message = message_text;
 
     // send message to all connected clients (in our example this is only one)
-    myChannelProxy.send(
-            message,
-            // callback invoked when the message is accepted for processing
-            function(success) {
-              $('#msg_send').empty();
-            },
-            function(error) {
-                alert("Could not send message: " + error.message);
-            }
-    );
+    myChannelProxy.send(message, success, failure);
   }
 
 
-  this.sendMessageTo = function(id, success, failure) {
+  this.sendMessageTo = function(id, message_text, success, failure) {
     if (typeof myChannelProxy === "undefined") {
         alert("You first have to connect to the channel.");
         return;
     }
+    
+    if (typeof id === "undefined" || id === null) {
+        alert("You have to select a vehicle in the list or on the map");
+        return;
+    }
 
     var message = new Object();
-    message.id = webinos.session.getPZPId();
+    message.id = id;
     message.type = "unicast";
-    message.message = $('#msg_send').val();
+    message.message = message_text;
 
       // send message to all connected clients (in our example this is only one)
-      myChannelProxy.send(
-              message,
-              // callback invoked when the message is accepted for processing
-              function(success) {
-                  // ok, but no action needed in our example
-              },
-              function(error) {
-                  alert("Could not send message: " + error.message);
-              }
-      );
+      myChannelProxy.send(message, success, failure);
   }
   
   var connectToNextChannel = function() {
