@@ -12,8 +12,11 @@
     <script type="text/javascript" src="./js/tum.gr-logistics.messaging.js"></script>
     <script type="text/javascript">
       $(document).ready(function () {
-
         var handleMessage = function(message) {
+          if(message.contents.type == "unicast" && message.contents.id != webinos.session.getPZPId()) {
+              //unicast message with wrong receipient id.
+              return;
+          }
           $('#msg_receive').append(message.contents.message + "<br><br>");
         }
         
