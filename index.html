@@ -1,6 +1,7 @@
 <html>
 	<head>
 		<title>HQ PZP App</title>
+		<link rel="stylesheet" href="./css/vehicle.css" />
 		<link rel="stylesheet" href="./css/main.css" />
 		<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 		<!--[if lte IE 8]>
@@ -17,23 +18,22 @@
   </head>
   <body>
     <h1>HQ - App</h1>
-    <div id="gis" style="float:left;width:50%;">
-      <div id="map"style="heigth: 400px; width: 500px"></div>
-      <p>Vehicles:</p>
-      <select id="vehicles" size="5" width="500" style="width: 500px"></select>
-      <p>Vehicles (without a location):</p>
-      <select id="noServiceVehicles" size="5" width="500" style="width: 500px"></select>
+    <div id="gis">
+      <div id="map"></div>
+      <h3>Vehicles:</h3>
+      <select id="vehicles" class="select"></select>
+      <h3>Vehicles (without a location):</h3>
+      <select id="noServiceVehicles" class="select"></select>
     </div>
     <div id="messaging">
-      <div id="top_buttons">
-        <input type="button" id="btn_send_bc" value="Send Broadcast">
-        <input type="button" id="btn_send_msg" value="Send to vehicle">
-        <input type="button" id="btn_clr_received" value="Clear">
-      </div>
-      <textarea id="msg_send" cols="50" rows="10">Hello World!</textarea>
-      <div id="msg_receive" style="height:150px;width:300px;max-height:300px;overflow:auto; border:thin solid black;"></div>
-      <select id="channels" size="5" width="500" style="width: 500px"></select>
-      <div id="availableChannels"/>
+      <h3>Outgoing message:</h3>
+      <textarea id="msg_send" class="message">Hello World!</textarea>
+      <input type="button" id="btn_send_bc" value="Send Broadcast">
+      <input type="button" id="btn_send_msg" value="Send to vehicle">
+      </ul>
+      <h3>Incoming messages:</h3>
+      <div id="msg_receive" class="message"></div>
+      <input type="button" id="btn_clr_received" value="Clear">
     </div>
 	</body>
 </html>
