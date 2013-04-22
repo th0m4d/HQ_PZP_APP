@@ -1,8 +1,8 @@
 $(document).ready(function () {
 
-	var map;
-	var vehicles = [];
-	var currentSelection;
+  var map;
+  var vehicles = [];
+  var currentSelection;
 
   var handleMessage = function(message) {
     if(message.contents.type == "unicast" && message.contents.id != webinos.session.getPZPId()) {

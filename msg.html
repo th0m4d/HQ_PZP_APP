@@ -13,6 +13,12 @@
     <script type="text/javascript" src="./js/tum.gr-logistics.messaging.js"></script>
     <script type="text/javascript">
       $(document).ready(function () {
+      
+        //listener ensures, that the webinos.session object is initialized.
+        webinos.session.addListener('registeredBrowser', function () {
+          findServices();
+        });
+      
         var handleMessage = function(message) {
           if(message.contents.type == "unicast" && message.contents.id != webinos.session.getPZPId()) {
               //unicast message with wrong receipient id.
@@ -27,8 +33,48 @@
           console.log("== Received message!");
           handleMessage(message);
         });
+        
+        function serviceIsFromPZP(id) {
+          if (id.split("/") && id.split("/").length === 2) {
+            return true;
+          } else  {
+            return false;
+          }
+        }
+        
+        function findServices() {
+          webinos.discovery.findServices(new ServiceType('http://webinos.org/api/test'), {
+            onFound: function (service) {
+              console.log('Found service: ' + service.serviceAddress);
+              if(serviceIsFromPZP(service.serviceAddress) && service.serviceAddress != webinos.session.getPZPId()) {
+                $('#receivers').append($('<option value=' + service.serviceAddress + '>' + service.serviceAddress + '</option>'));						
+              }
+            }
+          });
+        }
 
-        $('#btn_send').click(function(){messaging.sendBroadcast();});
+        $('#btn_send_broadcast').click(function(){messaging.sendBroadcast(
+          $('#msg_send').val(),
+          function(success) {
+            $('#msg_send').val('');
+          },
+          function(error) {
+              alert("Could not send message: " + error.message);
+          });
+        });
+    
+        $('#btn_send_unicast').click(function(){
+          messaging.sendMessageTo(
+            $('#receivers').val(),
+            $('#msg_send').val(),
+          function(success) {
+            $('#msg_send').val('');
+          },
+          function(error) {
+              alert("Could not send message: " + error.message);
+          });
+        });
+        
         $('#btn_reconnect').click(function(){connectToNextChannel();});
 
       });
@@ -39,7 +85,12 @@
     <div id="messaging">
       <h3>Outgoing message:</h3>
       <textarea id="msg_send" class="message">Hello World!</textarea>
-      <input type="button" id="btn_send" value="Send Message">
+      <div style="margin:10px;">
+        <label>Receiver:</label>
+        <select id="receivers" class="select" label="Receiver:"></select>
+      </div>
+      <input type="button" id="btn_send_broadcast" value="Send broadcast">
+      <input type="button" id="btn_send_unicast" value="Send to">
       <input type="button" id="btn_reconnect" value="Reconnect">
       <h3>Incoming messages:</h3>
       <div id="msg_receive" class="message"></div>
