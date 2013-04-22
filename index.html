@@ -19,19 +19,22 @@
   <body>
     <h1>HQ - App</h1>
     <div id="gis">
+      <h3>Vehicle GIS</h3>
       <div id="map"></div>
-      <label>Vehicles:</label>
-      <select id="vehicles" class="select"></select>
-      <label>Vehicles (no loc):</label>
-      <select id="noServiceVehicles" class="select"></select>
+      <div style="margin:10px;">
+        <label>Vehicles:</label>
+        <select id="vehicles" class="select"></select>
+        <label>Vehicles (no loc):</label>
+        <select id="noServiceVehicles" class="select"></select>
+      </div>
     </div>
     <div id="messaging">
-      <h3>Outgoing message:</h3>
+      <h3>Outgoing message</h3>
       <textarea id="msg_send" class="message">Hello World!</textarea>
       <input type="button" id="btn_send_bc" value="Send Broadcast">
       <input type="button" id="btn_send_msg" value="Send to vehicle">
       </ul>
-      <h3>Incoming messages:</h3>
+      <h3>Incoming messages</h3>
       <div id="msg_receive" class="message"></div>
       <input type="button" id="btn_clr_received" value="Clear">
     </div>
