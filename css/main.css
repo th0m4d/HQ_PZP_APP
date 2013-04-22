@@ -34,7 +34,17 @@ h1{
 
 .select {
   margin: 0 auto;
-  width:500px;
+  width:400px;
+}
+
+label {
+  height:15px;
+  display: -webkit-box;
+  display: -moz-box;
+  display: box;
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  box-align: center;
 }
 
 input[type=button] {

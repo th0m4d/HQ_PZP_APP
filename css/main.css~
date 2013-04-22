@@ -34,11 +34,16 @@ h1{
 
 .select {
   margin: 0 auto;
-  width:500px;
+  width:400px;
+}
+
+label {
+  height:15px;
 }
 
 input[type=button] {
-  margin: 20px;
+  width: 150px;
+  margin: 10px;
 }
 
 .message {
