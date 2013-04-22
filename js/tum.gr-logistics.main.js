@@ -52,7 +52,8 @@ $(document).ready(function () {
 		webinos.discovery.findServices(new ServiceType('http://webinos.org/api/test'), {
 			onFound: function (service) {
 				console.log('Found service: ' + service.serviceAddress);
-				if(serviceIsFromPZP(service.serviceAddress)) {
+				//exclude PZHs and the local PZP.
+				if(serviceIsFromPZP(service.serviceAddress) && service.serviceAddress != webinos.session.getPZPId()) {
 					$('#vehicles').append($('<option value=' + service.serviceAddress + '>' + service.serviceAddress + '</option>'));						
 					var vehicle = new GRVehicle(map, service.serviceAddress, noServiceCallback);
 					vehicles[service.serviceAddress] = vehicle;				
@@ -137,6 +138,6 @@ $(document).ready(function () {
     });
   });
   $('#btn_reconnect').click(function(){connectToNextChannel();});
-  jQuery("#vehicles").change(goToMarker);
+  jQuery("#vehicles").click(goToMarker);
 
 });
