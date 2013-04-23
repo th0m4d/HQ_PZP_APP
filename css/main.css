@@ -37,6 +37,11 @@ h1{
   width:400px;
 }
 
+mark.gold{
+  color:#000000;
+  background: #FFD700;
+}
+
 label {
   height:15px;
   display: -webkit-box;

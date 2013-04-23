@@ -14,25 +14,25 @@
     <script type="text/javascript">
       $(document).ready(function () {
       
+        var messaging;
+        
         //listener ensures, that the webinos.session object is initialized.
         webinos.session.addListener('registeredBrowser', function () {
+          messaging = new GRMessaging(function() {
+            messaging.searchChannel();
+          }, function(message) {
+            console.log("== Received message!");
+            handleMessage(message);
+          });
           findServices();
         });
       
         var handleMessage = function(message) {
-          if(message.contents.type == "unicast" && message.contents.id != webinos.session.getPZPId()) {
-              //unicast message with wrong receipient id.
-              return;
+          if(typeof messaging !== "undefined" && messaging.isReceiver(message.contents)) {
+            var messageHtml = messaging.getFormattedMessage(message.contents);
+            $('#msg_receive').append(messageHtml + "<br>");
           }
-          $('#msg_receive').append(message.contents.message + "<br><br>");
         }
-        
-        var messaging = new GRMessaging(function() {
-          messaging.searchChannel();
-        }, function(message) {
-          console.log("== Received message!");
-          handleMessage(message);
-        });
         
         function serviceIsFromPZP(id) {
           if (id.split("/") && id.split("/").length === 2) {
@@ -54,6 +54,7 @@
         }
 
         $('#btn_send_broadcast').click(function(){messaging.sendBroadcast(
+          webinos.session.getPZPId(),
           $('#msg_send').val(),
           function(success) {
             $('#msg_send').val('');
@@ -65,6 +66,7 @@
     
         $('#btn_send_unicast').click(function(){
           messaging.sendMessageTo(
+            webinos.session.getPZPId(),
             $('#receivers').val(),
             $('#msg_send').val(),
           function(success) {

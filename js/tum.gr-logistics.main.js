@@ -3,18 +3,14 @@ $(document).ready(function () {
   var map;
   var vehicles = [];
   var currentSelection;
-
+  var messaging;
+  
   var handleMessage = function(message) {
-    if(message.contents.type == "unicast" && message.contents.id != webinos.session.getPZPId()) {
-        //unicast message with wrong receipient id.
-        return;
+    if(typeof messaging !== "undefined" && messaging.isReceiver(message.contents)) {
+      var messageHtml = messaging.getFormattedMessage(message.contents);
+      $('#msg_receive').append(messageHtml + "<br>");
     }
-    $('#msg_receive').append(message.contents.message + "<br><br>");
   }
-
-  var messaging = new GRMessaging(function() {
-    messaging.createChannel();
-  },handleMessage);
 
   //log messages
   function printInfo(data) {
@@ -24,6 +20,9 @@ $(document).ready(function () {
   
   //listener ensures, that the webinos.session object is initialized.
   webinos.session.addListener('registeredBrowser', function () {
+    messaging = new GRMessaging(function() {
+      messaging.createChannel();
+    },handleMessage);
     initOpenStreetMaps();
     findServices();
   });
@@ -117,6 +116,7 @@ $(document).ready(function () {
   });
 
   $('#btn_send_bc').click(function(){messaging.sendBroadcast(
+    webinos.session.getPZPId(),
     $('#msg_send').val(),
     function(success) {
       $('#msg_send').val('');
@@ -127,7 +127,7 @@ $(document).ready(function () {
   });
     
   $('#btn_send_msg').click(function(){
-    messaging.sendMessageTo(
+    messaging.sendMessageTo(webinos.session.getPZPId(),
       $('#vehicles').val(),
       $('#msg_send').val(),
     function(success) {
@@ -137,6 +137,7 @@ $(document).ready(function () {
         alert("Could not send message: " + error.message);
     });
   });
+  
   $('#btn_reconnect').click(function(){connectToNextChannel();});
   jQuery("#vehicles").click(goToMarker);
 

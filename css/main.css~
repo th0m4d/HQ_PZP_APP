@@ -35,8 +35,11 @@ h1{
 .select {
   margin: 0 auto;
   width:400px;
-<<<<<<< HEAD
-=======
+}
+
+mark.gold{
+  color:#FFD700;
+  background: none;
 }
 
 label {
@@ -47,7 +50,6 @@ label {
   -webkit-box-align: center;
   -moz-box-align: center;
   box-align: center;
->>>>>>> f63d41da8a4d609a917ceafdc61634245b777587
 }
 
 input[type=button] {

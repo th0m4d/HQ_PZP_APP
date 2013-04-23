@@ -126,7 +126,7 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
       );
   }
   
-  this.sendBroadcast = function(message_text, success, failure) {
+  this.sendBroadcast = function(sender, message_text, success, failure) {
     if (typeof myChannelProxy === "undefined") {
         alert("You first have to create the channel.");
         return;
@@ -134,6 +134,7 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
 
     var message = new Object();
     message.type = "broadcast";
+    message.sender = sender;
     message.message = message_text;
 
     // send message to all connected clients (in our example this is only one)
@@ -141,24 +142,43 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
   }
 
 
-  this.sendMessageTo = function(id, message_text, success, failure) {
+  this.sendMessageTo = function(sender, receiver, message_text, success, failure) {
     if (typeof myChannelProxy === "undefined") {
         alert("You first have to connect to the channel.");
         return;
     }
     
-    if (typeof id === "undefined" || id === null) {
+    if (typeof sender === "undefined" || sender === null) {
+        alert("No sender defined.");
+        return;
+    }
+
+    if (typeof receiver === "undefined" || receiver === null) {
         alert("You have to select a vehicle in the list or on the map");
         return;
     }
 
     var message = new Object();
-    message.id = id;
+    message.receiver = receiver;
+    message.sender = sender;
     message.type = "unicast";
     message.message = message_text;
 
       // send message to all connected clients (in our example this is only one)
       myChannelProxy.send(message, success, failure);
+  }
+  
+  this.isReceiver = function(message) {
+    if(message.type == "unicast" && message.receiver != webinos.session.getPZPId()) {
+      return false;
+    }
+    else {
+      return true;
+    }
+  }
+  
+  this.getFormattedMessage = function(message) {
+    return "<p><mark class=\"gold\">" + message.sender + ":</mark> " + message.message + "</p>";
   }
   
   var connectToNextChannel = function() {
@@ -177,7 +197,7 @@ function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
     });
 
   }
-  
+
   webinos.discovery.findServices(new ServiceType("http://webinos.org/api/app2app"), {
       onFound: function (service) {
           service.bindService({
