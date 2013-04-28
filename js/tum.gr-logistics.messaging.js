@@ -1,4 +1,4 @@
-function GRMessaging(serivceBoundCallback, incomingMessageCallback) {
+function GRMessaging(serviceBoundCallback, incomingMessageCallback) {
 
   var app2app;
   var myChannelProxy;
