@@ -128,8 +128,8 @@ function GRMessaging(serviceBoundCallback, incomingMessageCallback) {
   
   this.sendBroadcast = function(sender, message_text, success, failure) {
     if (typeof myChannelProxy === "undefined") {
-        alert("You first have to create the channel.");
-        return;
+      alert("You first have to connect to a channel.");
+      return;
     }
 
     var message = new Object();
@@ -144,18 +144,18 @@ function GRMessaging(serviceBoundCallback, incomingMessageCallback) {
 
   this.sendMessageTo = function(sender, receiver, message_text, success, failure) {
     if (typeof myChannelProxy === "undefined") {
-        alert("You first have to connect to the channel.");
-        return;
+      alert("You first have to connect to a channel.");
+      return;
     }
     
     if (typeof sender === "undefined" || sender === null) {
-        alert("No sender defined.");
-        return;
+      alert("No sender defined.");
+      return;
     }
 
     if (typeof receiver === "undefined" || receiver === null) {
-        alert("You have to select a vehicle in the list or on the map");
-        return;
+      alert("You have to select a vehicle in the list or on the map");
+      return;
     }
 
     var message = new Object();
