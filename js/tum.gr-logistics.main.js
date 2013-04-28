@@ -53,7 +53,7 @@ $(document).ready(function () {
 				console.log('Found service: ' + service.serviceAddress);
 				//exclude PZHs and the local PZP.
 				if(serviceIsFromPZP(service.serviceAddress) && service.serviceAddress != webinos.session.getPZPId()) {
-					$('#vehicles').append($('<option value=' + service.serviceAddress + '>' + service.serviceAddress + '</option>'));						
+					$('#vehicles').append($('<option value=' + service.serviceAddress + '>' + service.serviceAddress + '</option>'));
 					var vehicle = new GRVehicle(map, service.serviceAddress, noServiceCallback);
 					vehicles[service.serviceAddress] = vehicle;				
 				}
@@ -84,35 +84,35 @@ $(document).ready(function () {
 		});
 	}
 
-	function handleError(error) {
-		switch(error.code) {
-			case error.PERMISSION_DENIED: alert("user did not share geolocation data");
-			break;
-			case error.POSITION_UNAVAILABLE: alert("could not detect current position");
-			break;
-			case error.TIMEOUT: alert("retrieving position timed out");
-			break;
-			default: alert("unknown error code = " + error.code + "; message = " + error.message);
-			break;
-		}
-	}
+  function handleError(error) {
+    switch(error.code) {
+      case error.PERMISSION_DENIED: alert("user did not share geolocation data");
+      break;
+      case error.POSITION_UNAVAILABLE: alert("could not detect current position");
+      break;
+      case error.TIMEOUT: alert("retrieving position timed out");
+      break;
+      default: alert("unknown error code = " + error.code + "; message = " + error.message);
+      break;
+    }
+  }
 
-	function goToMarker() {
-		var selectedValue = $("#vehicles").find(":selected").val();
-		if(selectedValue in vehicles) {
-			var vehicle = vehicles[selectedValue];
-			var position = vehicle.getPosition();
-			map.setView([position.coords.latitude, position.coords.longitude], 13);
-		}
-	}
+  function goToMarker() {
+    var selectedValue = $("#vehicles").find(":selected").val();
+    if(selectedValue in vehicles) {
+      var vehicle = vehicles[selectedValue];
+      var position = vehicle.getPosition();
+      map.setView([position.coords.latitude, position.coords.longitude], 13);
+    }
+  }
 
-	$('#noServiceVehicles').click(function() {
-		var serviceAddress = $('#noServiceVehicles').val();
-		if(typeof serviceAddress === "undefined" || serviceAddress == null || serviceAddress.length == 0) {
-			return;
-		}
-		$('#noServiceVehicles').find('option[value=\'' + serviceAddress + '\']').remove();
-		vehicles[serviceAddress] = new GRVehicle(map, serviceAddress, noServiceCallback);
+  $('#noServiceVehicles').click(function() {
+    var serviceAddress = $('#noServiceVehicles').val();
+    if(typeof serviceAddress === "undefined" || serviceAddress == null || serviceAddress.length == 0) {
+      return;
+    }
+    $('#noServiceVehicles').find('option[value=\'' + serviceAddress + '\']').remove();
+    vehicles[serviceAddress] = new GRVehicle(map, serviceAddress, noServiceCallback);
   });
 
   $('#btn_send_bc').click(function(){messaging.sendBroadcast(

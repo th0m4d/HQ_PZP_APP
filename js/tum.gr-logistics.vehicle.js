@@ -129,14 +129,22 @@ function GRVehicle(map, address, noServiceCallback) {
 	}
 
 
-	function getIcon() {
-		return L.icon({
-				iconUrl: 'js/leaflet/images/lorry.png',
-				//shadowUrl: 'js/leaflet/images/lorry-shadow.png',
+  function getIcon() {
+    
+    var iconUrl = 'js/leaflet/images/lorry.png';
+  
+    if(address.toLowerCase().indexOf("mobile") !== -1) {
+      iconUrl = 'js/leaflet/images/mobile.png';
+    }
+
+    if(address.toLowerCase().indexOf("hq") !== -1) {
+      iconUrl = 'js/leaflet/images/headquarter.png';
+    }
+  
+    return L.icon({
+				iconUrl: iconUrl,
 				iconSize:     [48, 48], // size of the icon
-				//shadowSize:   [48, 66], // size of the shadow
 				iconAnchor:   [24, 24], // point of the icon which will correspond to marker's location
-				//shadowAnchor: [24, 25],  // the same for the shadow
 				popupAnchor:  [-3, -30] // point from which the popup should open relative to the iconAnchor
 			});	
 	}
