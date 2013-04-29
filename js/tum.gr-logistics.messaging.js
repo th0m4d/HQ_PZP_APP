@@ -205,7 +205,7 @@ function GRMessaging(serviceBoundCallback, incomingMessageCallback) {
                 if(typeof app2app === "undefined") {
                   app2app = service;
                   window.onbeforeunload = function() {unbindApp2AppService()};
-                  serivceBoundCallback();
+                  serviceBoundCallback();
                 }
               }
           });
